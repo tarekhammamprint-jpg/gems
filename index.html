@@ -197,7 +197,7 @@
 <body>
 
 <div id="starfield"></div>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-24-0345-race-fix</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-25-0155-bestcombo-fix</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -1889,7 +1889,7 @@ function checkMatches(isInit = false) {
             currentLevelScore += matched.size * 10;
             if(matched.size > (window.userData.bestCombo||0)) {
                 window.userData.bestCombo = matched.size;
-                update(ref(db, `users/${window.currentUser}/bestCombo`), matched.size).catch(e=>console.log(e));
+                set(ref(db, `users/${window.currentUser}/bestCombo`), matched.size).catch(e=>console.log(e));
                 checkAchievements();
             }
             if(matched.size >= 4) {
