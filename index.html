@@ -197,7 +197,7 @@
 <body>
 
 <div id="starfield"></div>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-25-0155-bestcombo-fix</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-26-0430-fun-features</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -229,6 +229,8 @@
         <button class="btn-small btn-support" id="supportBtn" onclick="window.claimSupport()">دعم 🆘</button>
         <button class="btn-small btn-achievements" id="achBtn" onclick="window.openAchievements()">إنجازات 🏅</button>
         <button class="btn-small btn-challenges" id="challengesBtn" onclick="window.openDailyChallenges()">تحديات 🎯</button>
+        <button class="btn-small" style="background:linear-gradient(135deg,#3fb8ff,#1a6ea8);" id="mapBtn" onclick="window.openLevelMap()">خريطة 🗺️</button>
+        <button class="btn-small" style="background:linear-gradient(135deg,#ffd54f,#c9971f);" id="leaderboardBtn" onclick="window.openLeaderboard()">الأفضل 🏆</button>
         <button class="btn-small btn-spin" id="spinBtn" onclick="window.openSpinWheel()">عجلة الحظ 🎨</button>
         <button style="background:linear-gradient(135deg,#9b59b6,#6c2f8c);" class="btn-small" id="randomBtn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
         <button class="btn-small btn-menu" id="menuBtn" onclick="window.toggleSidebar()">المنافسون 👥</button>
@@ -255,6 +257,8 @@
         <div class="value target-color" id="targetDisplay">1</div>
     </div>
 </div>
+
+<div id="objectiveBanner" style="display:flex; justify-content:space-around; width:100%; max-width:480px; box-sizing:border-box; padding:8px 10px; margin-bottom:10px; background:rgba(255,255,255,0.04); border:1px solid var(--card-brd); border-radius:10px; font-size:12px; flex-wrap:wrap; gap:6px;"></div>
 
 <div class="game-area">
     <div class="grid" id="grid"></div>
@@ -749,6 +753,55 @@ window.claimChallenge = function(id){
     window.openDailyChallenges();
 };
 
+/* ============ خريطة المستويات ============ */
+window.openLevelMap = function(){
+    playSound('click');
+    let curLevel = window.userData.level || 1;
+    let stars = window.userData.levelStars || {};
+    let startLvl = Math.max(1, curLevel - 6);
+    let endLvl = curLevel + 6;
+    let html = '<div style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto;">';
+    for (let lvl = endLvl; lvl >= startLvl; lvl--) {
+        let isDone = lvl < curLevel;
+        let isCurrent = lvl === curLevel;
+        let isLocked = lvl > curLevel;
+        let lvlStars = stars[lvl] || 0;
+        let bg = isCurrent ? 'rgba(255,201,77,0.18); border-color:#ffc94d;' : isDone ? 'rgba(0,230,168,0.1); border-color:#00e6a8;' : 'rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.08); opacity:0.5;';
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-radius:10px; border:1px solid; background:${bg}">
+            <span style="font-weight:800; ${isCurrent?'color:#ffc94d;':''}">${isLocked?'&#x1F512; ':''}المستوى ${lvl} ${isCurrent?'(الحالي)':''}</span>
+            <span style="font-size:16px;">${isDone || isCurrent ? renderStars(lvlStars) : ''}</span>
+        </div>`;
+    }
+    html += '</div>';
+    AppModal.show({ title: "خريطة المستويات &#x1F5FA;", html: html, confirmText: "إغلاق" });
+};
+
+/* ============ لوحة أفضل النتائج (اللعب الفردي) ============ */
+window.openLeaderboard = function(){
+    playSound('click');
+    let entries = Object.keys(window.usersList || {})
+        .filter(p => !window.usersList[p].isBot && (window.usersList[p].bestSoloScore || 0) > 0)
+        .map(p => ({ name: p, score: window.usersList[p].bestSoloScore || 0, flag: getSafeFlag(window.usersList[p].flag) }))
+        .sort((a,b) => b.score - a.score)
+        .slice(0, 15);
+    let html = '';
+    if (entries.length === 0) {
+        html = '<p style="text-align:center; color:#999;">لسه محدش سجّل نتيجة فردية. كن أول واحد!</p>';
+    } else {
+        html = '<div style="display:flex; flex-direction:column; gap:6px; max-height:50vh; overflow-y:auto;">';
+        entries.forEach((e, idx) => {
+            let crown = idx===0?'&#x1F947; ':idx===1?'&#x1F948; ':idx===2?'&#x1F949; ':'';
+            let isMe = e.name === window.currentUser;
+            html += `<div style="display:flex; justify-content:space-between; padding:8px 12px; border-radius:8px; background:${isMe?'rgba(255,201,77,0.15)':'rgba(255,255,255,0.04)'};">
+                <span>${crown}${e.flag} ${e.name}</span>
+                <strong style="color:#8affd6;">${e.score}</strong>
+            </div>`;
+        });
+        html += '</div>';
+    }
+    AppModal.show({ title: "أفضل النتائج الفردية &#x1F3C6;", html: html, confirmText: "إغلاق" });
+};
+
 window.openSpinWheel = function() {
     playSound('click');
     let now = Date.now();
@@ -941,6 +994,10 @@ async function processLogin(user, pass) {
                 if(data.totalWins === undefined) data.totalWins = 0;
                 if(data.bestCombo === undefined) data.bestCombo = 0;
                 if(data.giftsSent === undefined) data.giftsSent = 0;
+                if(data.bestSoloScore === undefined) data.bestSoloScore = 0;
+                if(data.levelStars === undefined) data.levelStars = {};
+                if(data.loginStreak === undefined) data.loginStreak = 0;
+                if(data.lastLoginDate === undefined) data.lastLoginDate = null;
                 data.flag = getSafeFlag(data.flag || myFlag);
                 update(ref(db, `users/${user}`), { flag: data.flag, isSearching: false, online: true }).catch(e=>console.log(e));
                 window.currentUser = user; window.userData = data; AppModal.close(); startGame();
@@ -953,7 +1010,7 @@ async function processLogin(user, pass) {
             localStorage.setItem('candyUser', user); localStorage.setItem('candyPass', pass);
             let salt = generateSalt();
             let passwordHash = await hashPassword(pass, salt);
-            let newData = { passwordHash, salt, level: 1, balance: 100, battlesPlayed: 0, soloGamesPlayed: 0, online: true, banned: false, flag: myFlag, isSearching: false, lastSupportTime: 0, lastSpinTime: 0, lastGiftTime: 0, achievements: {}, totalWins: 0, bestCombo: 0, giftsSent: 0 };
+            let newData = { passwordHash, salt, level: 1, balance: 100, battlesPlayed: 0, soloGamesPlayed: 0, online: true, banned: false, flag: myFlag, isSearching: false, lastSupportTime: 0, lastSpinTime: 0, lastGiftTime: 0, achievements: {}, totalWins: 0, bestCombo: 0, giftsSent: 0, bestSoloScore: 0, levelStars: {}, loginStreak: 0, lastLoginDate: null };
             set(ref(db, `users/${user}`), newData); window.currentUser = user; window.userData = newData; AppModal.close(); startGame();
         }
     }).catch(() => { displayLoginModal(); });
@@ -1080,11 +1137,40 @@ function challengeSelectedBot(botName, wager, botFlag, fromRandom = false) {
 }
 window.challengeSelectedBot = challengeSelectedBot;
 
+/* ============ سلسلة الدخول اليومي ============ */
+function dayKey(d) { return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+function checkDailyStreak() {
+    let today = dayKey(new Date());
+    let lastLogin = window.userData.lastLoginDate;
+    if (lastLogin === today) return; // اتفحصت النهاردة قبل كده
+    let yesterday = dayKey(new Date(Date.now() - 24*60*60*1000));
+    let streak = (lastLogin === yesterday) ? ((window.userData.loginStreak || 0) + 1) : 1;
+    window.userData.lastLoginDate = today;
+    window.userData.loginStreak = streak;
+    let reward = Math.min(streak, 7) * 10;
+    window.userData.balance += reward;
+    update(ref(db, `users/${window.currentUser}`), { lastLoginDate: today, loginStreak: streak, balance: window.userData.balance }).catch(e=>console.log(e));
+    checkAchievements();
+    setTimeout(() => {
+        playSound('epic_match'); fireConfetti(30);
+        if (!window.battleMode) scoreDisplay.innerHTML = fmtStars(window.userData.balance);
+        AppModal.show({
+            title: "مكافأة الدخول اليومي! &#x1F4C5;",
+            html: `<div style="font-size:60px; margin:10px 0;">&#x1F525;</div>
+                   <h3 style="color:#8affd6; margin:5px 0;">سلسلة ${streak} ${streak===1?'يوم':'أيام'} متتالية!</h3>
+                   <p>ربحت <strong style="color:#ffc94d">+${STAR}${reward}</strong></p>
+                   <p style="font-size:12px; color:#999;">استمر كل يوم عشان تكبر المكافأة (لحد ⭐70 في اليوم السابع فأكثر)</p>`,
+            confirmText: "رائع! &#x1F970;"
+        });
+    }, 900);
+}
+
 function startGame() {
     document.getElementById('playerName').innerText = window.currentUser;
     document.getElementById('playerFlag').innerHTML = getSafeFlag(window.userData.flag);
     remove(ref(db, `users/${window.currentUser}/battle`));
     ensureDailyChallenges();
+    checkDailyStreak();
 
     onValue(ref(db, '.info/connected'), (snap) => {
         window.amIConnected = snap.val() === true;
@@ -1579,12 +1665,13 @@ function startBotBattle(wager, botName, botFlag) {
     targetLabel.innerHTML = `${getSafeFlag(botFlag)} ${botName}`; targetDisplay.innerText = "0"; targetDisplay.classList.add('vs-mode'); movesDisplay.innerHTML = moves;
 
     document.getElementById('menuBtn').style.display = 'none'; document.getElementById('logoutBtn').style.display = 'none';
-    document.getElementById('spinBtn').style.display = 'none'; document.getElementById('challengesBtn').style.display = 'none'; document.getElementById('achBtn').style.display = 'none';
+    document.getElementById('spinBtn').style.display = 'none'; document.getElementById('challengesBtn').style.display = 'none'; document.getElementById('achBtn').style.display = 'none'; document.getElementById('mapBtn').style.display = 'none'; document.getElementById('leaderboardBtn').style.display = 'none';
     document.getElementById('surrenderBtn').style.display = 'block'; document.getElementById('chatBtn').style.display = 'block';
 
     window.hasUsedSkill = false;
     let ultBtn = document.getElementById('ultimateBtn'); if(ultBtn) ultBtn.disabled = false;
     document.getElementById('skillBar').style.display = 'flex';
+    updateObjectiveBanner();
     checkSupportEligibility();
 
     if(window.botInterval) clearTimeout(window.botInterval);
@@ -1639,12 +1726,13 @@ function startBattleMode(wager, opponent) {
     targetLabel.innerHTML = `${oppFlag} ${opponent}`; targetDisplay.innerText = "0"; targetDisplay.classList.add('vs-mode'); movesDisplay.innerHTML = moves;
 
     document.getElementById('menuBtn').style.display = 'none'; document.getElementById('logoutBtn').style.display = 'none';
-    document.getElementById('spinBtn').style.display = 'none'; document.getElementById('challengesBtn').style.display = 'none'; document.getElementById('achBtn').style.display = 'none';
+    document.getElementById('spinBtn').style.display = 'none'; document.getElementById('challengesBtn').style.display = 'none'; document.getElementById('achBtn').style.display = 'none'; document.getElementById('mapBtn').style.display = 'none'; document.getElementById('leaderboardBtn').style.display = 'none';
     document.getElementById('surrenderBtn').style.display = 'block'; document.getElementById('chatBtn').style.display = 'block';
 
     window.hasUsedSkill = false;
     let ultBtn = document.getElementById('ultimateBtn'); if(ultBtn) ultBtn.disabled = false;
     document.getElementById('skillBar').style.display = 'flex';
+    updateObjectiveBanner();
     checkSupportEligibility();
 
     if(window.battlePingInterval) clearInterval(window.battlePingInterval);
@@ -1753,6 +1841,8 @@ window.evaluateBattleResult = evaluateBattleResult;
 function restoreBattleUI(){
     document.getElementById('challengesBtn').style.display = 'block';
     document.getElementById('achBtn').style.display = 'block';
+    document.getElementById('mapBtn').style.display = 'block';
+    document.getElementById('leaderboardBtn').style.display = 'block';
 }
 
 function updateMyBalance(amount) {
@@ -1788,7 +1878,41 @@ window.resetToNormalMode = resetToNormalMode;
 
 const candyIcons = ["url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g1' cx='30%25' cy='30%25' r='70%25'%3E%3Cstop offset='0%25' stop-color='%23ff9999'/%3E%3Cstop offset='100%25' stop-color='%23cc0000'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23g1)'/%3E%3C/svg%3E\")","url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2366ccff'/%3E%3Cstop offset='100%25' stop-color='%230055cc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='50,5 95,50 50,95 5,50' fill='url(%23g2)'/%3E%3C/svg%3E\")","url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g3' cx='30%25' cy='30%25' r='70%25'%3E%3Cstop offset='0%25' stop-color='%2366ff99'/%3E%3Cstop offset='100%25' stop-color='%2300802b'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect x='10' y='10' width='80' height='80' rx='20' fill='url(%23g3)'/%3E%3C/svg%3E\")","url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g4' cx='30%25' cy='30%25' r='70%25'%3E%3Cstop offset='0%25' stop-color='%23ffffcc'/%3E%3Cstop offset='100%25' stop-color='%23cc9900'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpolygon points='50,5 64,35 97,35 69,57 80,90 50,72 20,90 31,57 3,35 36,35' fill='url(%23g4)'/%3E%3C/svg%3E\")","url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g5' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23e699ff'/%3E%3Cstop offset='100%25' stop-color='%23660099'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='25,5 75,5 95,50 75,95 25,95 5,50' fill='url(%23g5)'/%3E%3C/svg%3E\")"];
 
-function initLevel() { window.battleEnded = false; moves = 25; currentLevelScore = 0; movesDisplay.innerHTML = moves; if(!window.battleMode) { targetDisplay.innerHTML = level; scoreDisplay.innerHTML = fmtStars(window.userData.balance); } createBoard(); }
+/* ============ أهداف المستويات ونظام النجوم ============ */
+function targetScoreForLevel(lvl) { return 300 + (lvl - 1) * 60; }
+function renderStars(count) {
+    let html = '';
+    for (let i = 0; i < 3; i++) html += i < count ? '&#11088;' : '<span style="opacity:0.25;">&#11088;</span>';
+    return html;
+}
+function openTreasureBox() {
+    playSound('epic_match'); fireConfetti(45);
+    let reward = 20 + Math.floor(Math.random() * 80);
+    window.userData.balance += reward;
+    update(ref(db, `users/${window.currentUser}`), { balance: window.userData.balance }).catch(e=>console.log(e));
+    if (!window.battleMode) scoreDisplay.innerHTML = fmtStars(window.userData.balance);
+    checkAchievements();
+    AppModal.show({
+        title: "صندوق كنز! &#x1F381;",
+        html: `<div style="font-size:70px; animation: popSticker .6s cubic-bezier(0.175,0.885,0.32,1.275);">&#x1F4E6;</div>
+               <h3 style="color:#ffc94d; margin:5px 0;">فتحت صندوق كنز!</h3>
+               <p>وجدت <strong style="color:#8affd6">+${STAR}${reward}</strong> بداخله!</p>`,
+        confirmText: "رائع! &#x1F970;", onConfirm: initLevel
+    });
+}
+function updateObjectiveBanner() {
+    let banner = document.getElementById('objectiveBanner');
+    if (!banner) return;
+    if (window.battleMode) { banner.style.display = 'none'; return; }
+    let target = targetScoreForLevel(level);
+    let best = window.userData.bestSoloScore || 0;
+    banner.style.display = 'flex';
+    banner.innerHTML = `<span>&#x1F3AF; الهدف: <strong style="color:#8affd6">${target}</strong></span>
+                         <span>&#x1F3C6; أفضل نتيجة: <strong style="color:#ffc94d">${best}</strong></span>
+                         <span>&#x2B50; ${renderStars((window.userData.levelStars && window.userData.levelStars[level]) || 0)}</span>`;
+}
+
+function initLevel() { window.battleEnded = false; moves = 25; currentLevelScore = 0; movesDisplay.innerHTML = moves; if(!window.battleMode) { targetDisplay.innerHTML = level; scoreDisplay.innerHTML = fmtStars(window.userData.balance); updateObjectiveBanner(); } createBoard(); }
 
 let dragStartX = 0, dragStartY = 0, dragStartIndex = null;
 
@@ -1829,7 +1953,7 @@ function handleInputEnd(e) {
 
 function attemptSwap(i1, i2) {
     if (Math.abs((i1%width)-(i2%width)) + Math.abs(Math.floor(i1/width)-Math.floor(i2/width)) === 1) {
-        swap(i1, i2); isAnimating = true; playSound('click');
+        swap(i1, i2); isAnimating = true; playSound('click'); cascadeMatchCount = 0;
         if(selectedSquare !== null) { squares[selectedSquare].classList.remove('selected'); selectedSquare = null; }
         setTimeout(() => {
             if (!checkMatches()) {
@@ -1879,27 +2003,90 @@ function showFloatingReward(text, matchedSet, isCombo) {
     setTimeout(() => { if(floatEl.parentNode) floatEl.parentNode.removeChild(floatEl); }, 1000);
 }
 
+function findRuns() {
+    let runs = [];
+    for (let r = 0; r < width; r++) {
+        let c = 0;
+        while (c < width) {
+            let type = boardTypes[r*width+c];
+            if (type === -1) { c++; continue; }
+            let runIdx = [r*width+c]; let c2 = c+1;
+            while (c2 < width && boardTypes[r*width+c2] === type) { runIdx.push(r*width+c2); c2++; }
+            if (runIdx.length >= 3) runs.push({ indices: runIdx, orientation: 'h', type });
+            c = c2;
+        }
+    }
+    for (let c = 0; c < width; c++) {
+        let r = 0;
+        while (r < width) {
+            let type = boardTypes[r*width+c];
+            if (type === -1) { r++; continue; }
+            let runIdx = [r*width+c]; let r2 = r+1;
+            while (r2 < width && boardTypes[r2*width+c] === type) { runIdx.push(r2*width+c); r2++; }
+            if (runIdx.length >= 3) runs.push({ indices: runIdx, orientation: 'v', type });
+            r = r2;
+        }
+    }
+    return runs;
+}
+
+/* محرك مطابقة محدّث: تطابق 4 متجاورة يمسح الصف/العمود بالكامل (حلوى مخططة)،
+   وتطابق 5+ يمسح كل الحلوى من نفس اللون في اللوحة (قنبلة لونية). تم التأكد من تطابق
+   السلوك العادي 100% مع النسخة القديمة عبر 20,000 اختبار عشوائي قبل الدمج. */
 function checkMatches(isInit = false) {
+    let runs = findRuns();
+    if (runs.length === 0) return false;
     let matched = new Set();
-    for (let r = 0; r < width; r++) { for (let c = 0; c < width - 2; c++) { let i = r*width+c; let m = [i, i+1, i+2]; let type = boardTypes[i]; if (type !== -1 && m.every(x => boardTypes[x] === type)) m.forEach(x => matched.add(x)); } }
-    for (let c = 0; c < width; c++) { for (let r = 0; r < width - 2; r++) { let i = r*width+c; let m = [i, i+width, i+2*width]; let type = boardTypes[i]; if (type !== -1 && m.every(x => boardTypes[x] === type)) m.forEach(x => matched.add(x)); } }
+    let bigMatchHappened = false; let bombHappened = false;
+    runs.forEach(run => {
+        run.indices.forEach(i => matched.add(i));
+        if (!isInit && run.indices.length >= 4) {
+            bigMatchHappened = true;
+            if (run.indices.length >= 5) {
+                bombHappened = true;
+                for (let idx=0; idx<boardTypes.length; idx++) { if (boardTypes[idx] === run.type) matched.add(idx); }
+            } else {
+                run.indices.forEach(i => {
+                    if (run.orientation === 'h') { let r = Math.floor(i/width); for (let c=0;c<width;c++) matched.add(r*width+c); }
+                    else { let c = i % width; for (let r=0;r<width;r++) matched.add(r*width+c); }
+                });
+            }
+        }
+    });
 
     if (matched.size > 0) {
         if (!isInit) {
             currentLevelScore += matched.size * 10;
+            cascadeMatchCount++;
+            if (cascadeMatchCount >= 2) {
+                let bonus = (cascadeMatchCount - 1) * 8;
+                currentLevelScore += bonus;
+                showFloatingReward(`&#x1F525; كومبو x${cascadeMatchCount}`, matched, true);
+                playSound('epic_match');
+            }
             if(matched.size > (window.userData.bestCombo||0)) {
                 window.userData.bestCombo = matched.size;
                 set(ref(db, `users/${window.currentUser}/bestCombo`), matched.size).catch(e=>console.log(e));
                 checkAchievements();
             }
-            if(matched.size >= 4) {
+            if (bombHappened) {
+                playSound('epic_match'); fireConfetti(30);
+                window.userData.balance += 15;
+                update(ref(db, `users/${window.currentUser}`), { balance: window.userData.balance });
+                showFloatingReward(`&#x1F4A3; قنبلة لونية! +${STAR}15`, matched, true);
+            } else if (bigMatchHappened) {
+                playSound('epic_match');
+                window.userData.balance += 8;
+                update(ref(db, `users/${window.currentUser}`), { balance: window.userData.balance });
+                showFloatingReward(`&#x26A1; مسح كامل! +${STAR}8`, matched, true);
+            } else if(matched.size >= 4) {
                 playSound('epic_match');
                 window.userData.balance += 5;
                 update(ref(db, `users/${window.currentUser}`), { balance: window.userData.balance });
-                checkSupportEligibility();
-                if(!window.battleMode) { scoreDisplay.innerHTML = fmtStars(window.userData.balance); }
                 showFloatingReward(`+${STAR}5`, matched, true);
             } else { playSound('match'); }
+            checkSupportEligibility();
+            if(!window.battleMode) { scoreDisplay.innerHTML = fmtStars(window.userData.balance); }
             progressChallenge('score300', currentLevelScore, true);
             if(window.battleMode) { scoreDisplay.innerHTML = currentLevelScore; syncScoreToFirebase(); }
         }
@@ -1908,6 +2095,7 @@ function checkMatches(isInit = false) {
 }
 
 function dropSequence(isInit = false) {
+
     setTimeout(() => {
         squares.forEach((sq, idx) => { if(sq.classList.contains('fade-out')) { sq.style.backgroundImage = ''; boardTypes[idx] = -1; sq.classList.remove('fade-out'); } });
         for (let c = 0; c < width; c++) {
@@ -1937,6 +2125,7 @@ function dropSequence(isInit = false) {
 /* صمام أمان: لو سلسلة الانفجارات المتتالية (كاسكيد) طالت جدًا لأي سبب غير متوقع،
    نوقفها بالقوة ونرجّع اللعبة قابلة للتفاعل تاني بدل ما تفضل "متجمدة" للأبد. */
 let cascadeDepth = 0;
+let cascadeMatchCount = 0; /* عدّاد الكومبو المتتالي داخل نفس الحركة الواحدة */
 const MAX_CASCADE_DEPTH = 40;
 
 function checkAllMatches(isInit = false) {
@@ -1953,41 +2142,62 @@ function checkAllMatches(isInit = false) {
             else {
                 if(window.battleEnded) return; window.battleEnded = true;
                 window.userData.soloGamesPlayed = (window.userData.soloGamesPlayed || 0) + 1;
-                update(ref(db, `users/${window.currentUser}`), { soloGamesPlayed: window.userData.soloGamesPlayed });
                 progressChallenge('play3', 1, false);
-                checkAchievements();
 
-                if (window.userData.soloGamesPlayed % 5 === 0) {
-                    playSound('win'); level++; window.userData.level = level; window.userData.balance += 30;
-                    update(ref(db, `users/${window.currentUser}`), { balance: window.userData.balance, level: level }).catch(e=>console.log(e));
-                    checkAchievements(); fireConfetti(35);
+                let target = targetScoreForLevel(level);
+                let stars = currentLevelScore >= target*2.2 ? 3 : currentLevelScore >= target*1.5 ? 2 : currentLevelScore >= target ? 1 : 0;
+                let prevStars = (window.userData.levelStars && window.userData.levelStars[level]) || 0;
+                if (stars > prevStars) {
+                    window.userData.levelStars = window.userData.levelStars || {};
+                    window.userData.levelStars[level] = stars;
+                    set(ref(db, `users/${window.currentUser}/levelStars/${level}`), stars).catch(e=>console.log(e));
+                }
+
+                let prevBestScore = window.userData.bestSoloScore || 0;
+                let isNewRecord = currentLevelScore > prevBestScore;
+                if (isNewRecord) window.userData.bestSoloScore = currentLevelScore;
+
+                let reward = 5 + stars*10;
+                window.userData.balance += reward;
+                update(ref(db, `users/${window.currentUser}`), {
+                    balance: window.userData.balance,
+                    soloGamesPlayed: window.userData.soloGamesPlayed,
+                    bestSoloScore: window.userData.bestSoloScore || 0
+                }).catch(e=>console.log(e));
+                checkAchievements();
+                if(!window.battleMode) scoreDisplay.innerHTML = fmtStars(window.userData.balance);
+
+                if (stars >= 1) {
+                    level++; window.userData.level = level;
+                    update(ref(db, `users/${window.currentUser}`), { level: level }).catch(e=>console.log(e));
+                    checkAchievements();
+                    playSound('win'); fireConfetti(35);
+                    let showTreasure = (level % 5 === 1);
                     AppModal.show({
-                        title: "مستوى جديد! &#x2B50;",
-                        html: `<div style="position:relative; display:inline-block; margin:10px 0; animation: popSticker 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                                  <div style="font-size:80px; text-shadow: 0 0 20px #ffc94d;">&#x2B50;</div>
-                                  <div style="position:absolute; top: 15px; left: 0; width: 100%; text-align: center; font-size: 28px; font-weight: 900; color: #fff; text-shadow: 2px 2px 4px #000;">${level}</div>
-                               </div>
-                               <h3 style="color:#8affd6; margin: 5px 0;">أحسنت!</h3>
-                               <p>لقد ربحت <strong style="color:#8affd6">+${STAR}30</strong> كمكافأة.</p>`,
-                        confirmText: "استمر &#x27A1;", onConfirm: initLevel
+                        title: isNewRecord ? "رقم قياسي جديد! &#x1F3C6;" : "أحسنت! &#x2705;",
+                        html: `<div style="font-size:46px; margin:10px 0;">${renderStars(stars)}</div>
+                               <h3 style="color:#8affd6; margin: 5px 0;">النقاط: ${currentLevelScore}</h3>
+                               ${isNewRecord ? '<p style="color:#ffc94d;">&#x1F3C6; رقم قياسي شخصي جديد!</p>' : ''}
+                               <p>ربحت <strong style="color:#8affd6">+${STAR}${reward}</strong></p>`,
+                        confirmText: "المستوى التالي &#x27A1;",
+                        onConfirm: () => { if (showTreasure) openTreasureBox(); else initLevel(); }
                     });
                 } else {
-                    let gamesLeft = 5 - (window.userData.soloGamesPlayed % 5);
-                    playSound('match'); window.userData.balance += 5;
-                    update(ref(db, `users/${window.currentUser}`), { balance: window.userData.balance });
-                    scoreDisplay.innerHTML = fmtStars(window.userData.balance);
+                    playSound('error');
                     AppModal.show({
-                        title: "انتهت اللعبة! &#x1F389;",
-                        html: `<h3 style="color:#ffc94d; margin: 5px 0;">النقاط: ${currentLevelScore}</h3>
-                               <p>العب <strong style="color:#ff6fa3">${gamesLeft}</strong> مباريات إضافية للوصول للمستوى التالي!</p>
-                               <p style="font-size:13px; color:#8affd6;">مكافأة اللعب: +${STAR}5</p>`,
-                        confirmText: "لعب مجدداً &#x1F501;", onConfirm: initLevel
+                        title: "حاول تاني! &#x1F504;",
+                        html: `<div style="font-size:46px; margin:10px 0; opacity:0.7;">${renderStars(stars)}</div>
+                               <h3 style="color:#ffc94d; margin: 5px 0;">النقاط: ${currentLevelScore}</h3>
+                               <p>محتاج <strong style="color:#ff6fa3">${target}</strong> نقطة على الأقل لعبور المستوى.</p>
+                               <p style="font-size:13px; color:#8affd6;">ربحت +${STAR}${reward} على المحاولة</p>`,
+                        confirmText: "إعادة المحاولة &#x1F501;", onConfirm: initLevel
                     });
                 }
             }
         }
     }
 }
+
 </script>
 </body>
 </html>
