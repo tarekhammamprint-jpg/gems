@@ -249,7 +249,7 @@
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-28-0330-journey-map</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-28-0500-royal-terrain</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -921,14 +921,14 @@ window.claimChallenge = function(id){
 /* ============ خريطة المستويات ============ */
 /* ============ خريطة الرحلة: مسار بصري متعرّج عبر "بلدان" لا نهائية ============ */
 const MAP_LANDS = [
-    { name: '&#x1F36C; أرض السكر' },
-    { name: '&#x1F36B; مملكة الشوكولاتة' },
-    { name: '&#x1F36D; وادي المصاصات' },
-    { name: '&#x1F347; غابة العنب' },
-    { name: '&#x1F34B; صحراء الليمون' },
-    { name: '&#x1F353; جبال الفراولة' },
-    { name: '&#x1F33F; سهول النعناع' },
-    { name: '&#x2744;&#xFE0F; قمم السكر المثلج' },
+    { name: '&#x1F451; أرض الملوك', bg: 'linear-gradient(165deg, #6a3fa0 0%, #4a2a70 45%, #8B6914 100%)', texture: 'radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1.5px)', textureSize: '26px 26px' },
+    { name: '&#x1F30A; محيط اللؤلؤ الأزرق', bg: 'linear-gradient(165deg, #073b57 0%, #147ba8 50%, #4dd8e6 100%)', texture: 'repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,0.12) 0, rgba(255,255,255,0.12) 2px, transparent 2px, transparent 42px)', textureSize: 'auto' },
+    { name: '&#x1F409; وادي التنانين', bg: 'linear-gradient(165deg, #3a0d0d 0%, #7a1f1f 45%, #a83232 100%)', texture: 'repeating-linear-gradient(58deg, rgba(0,0,0,0.22) 0, rgba(0,0,0,0.22) 9px, transparent 9px, transparent 34px)', textureSize: 'auto' },
+    { name: '&#x1F3DC;&#xFE0F; صحراء الرمال الذهبية', bg: 'linear-gradient(165deg, #8B6914 0%, #c9971f 50%, #e6c15c 100%)', texture: 'repeating-linear-gradient(122deg, rgba(255,255,255,0.14) 0, rgba(255,255,255,0.14) 7px, transparent 7px, transparent 28px)', textureSize: 'auto' },
+    { name: '&#x1F3DD;&#xFE0F; جزر الكنوز المفقودة', bg: 'linear-gradient(165deg, #0d5c5f 0%, #14a098 50%, #e6c15c 100%)', texture: 'repeating-radial-gradient(circle at 70% 60%, rgba(255,255,255,0.14) 0, rgba(255,255,255,0.14) 2px, transparent 2px, transparent 38px)', textureSize: 'auto' },
+    { name: '&#x2744;&#xFE0F; أراضي الثلج الأبدي', bg: 'linear-gradient(165deg, #1a5f8a 0%, #3fb8ff 45%, #cdeffb 100%)', texture: 'radial-gradient(circle, rgba(255,255,255,0.55) 1.5px, transparent 2px)', textureSize: '20px 20px' },
+    { name: '&#x1F30B; جبال البركان الناري', bg: 'linear-gradient(165deg, #200a0a 0%, #7a1f1f 45%, #ff6b1a 100%)', texture: 'repeating-linear-gradient(65deg, rgba(255,150,50,0.18) 0, rgba(255,150,50,0.18) 6px, transparent 6px, transparent 26px)', textureSize: 'auto' },
+    { name: '&#x1F30C; عالم النجوم السحري', bg: 'linear-gradient(165deg, #0d0824 0%, #4a1e78 50%, #2a0845 100%)', texture: 'radial-gradient(circle, rgba(255,255,255,0.45) 1px, transparent 1.5px)', textureSize: '30px 30px' },
 ];
 const LEVELS_PER_LAND = 10;
 function landForLevel(lvl) {
@@ -936,8 +936,9 @@ function landForLevel(lvl) {
     let cycle = Math.floor(landIndex / MAP_LANDS.length);
     let base = MAP_LANDS[landIndex % MAP_LANDS.length];
     let name = base.name + (cycle > 0 ? ` (الجولة ${cycle + 1})` : '');
-    return { name, landIndex };
+    return { name, landIndex, bg: base.bg, texture: base.texture, textureSize: base.textureSize };
 }
+
 
 window.closeLevelMap = function() {
     document.getElementById('levelMapOverlay').classList.add('hidden');
@@ -953,12 +954,17 @@ window.openLevelMap = function() {
     let html = '<div class="lm-spine"></div>';
     let currentLandIndex = -1;
     let currentNodeId = null;
+    let sectionOpen = false;
 
     for (let lvl = startLvl; lvl <= endLvl; lvl++) {
         let land = landForLevel(lvl);
         if (land.landIndex !== currentLandIndex) {
+            if (sectionOpen) html += '</div>';
             currentLandIndex = land.landIndex;
+            let sizeRule = land.textureSize === 'auto' ? '' : `background-size:${land.textureSize};`;
+            html += `<div class="lm-land-section" style="background:${land.texture} , ${land.bg}; ${sizeRule}">`;
             html += `<div class="lm-land-divider">${land.name}<br><span style="font-size:11px; opacity:0.7;">المستويات ${land.landIndex*LEVELS_PER_LAND+1} - ${(land.landIndex+1)*LEVELS_PER_LAND}</span></div>`;
+            sectionOpen = true;
         }
         let isDone = lvl < curLevel;
         let isCurrent = lvl === curLevel;
@@ -980,6 +986,7 @@ window.openLevelMap = function() {
             </div>
         </div>`;
     }
+    if (sectionOpen) html += '</div>';
     html += `<div class="lm-teaser">&#x1F30D; ولسه فيه بلاد ومستويات أكتر تنتظرك مع كل تقدم...</div>`;
 
     document.getElementById('levelMapContent').innerHTML = html;
