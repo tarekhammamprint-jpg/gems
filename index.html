@@ -212,13 +212,44 @@
     }
     .intro-play-btn:active{ transform:scale(0.93);}
     #musicToggleBtn{ position:fixed; top:8px; left:8px; z-index:99999; background:rgba(0,0,0,0.55); border:1px solid var(--mint); color:#fff; border-radius:50%; width:36px; height:36px; font-size:16px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.5);}
+
+    /* ============ خريطة الرحلة (خريطة صماء بصرية بمسار متعرّج ولا نهاية للمستويات) ============ */
+    .level-map-shell{
+        width:94vw; max-width:400px; height:82vh; max-height:720px; background:linear-gradient(180deg,#1a1250,#0d0824);
+        border:2px solid var(--gold); border-radius:22px; overflow:hidden; display:flex; flex-direction:column;
+        box-shadow:0 20px 60px rgba(0,0,0,0.8);
+    }
+    .lm-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:1px solid var(--card-brd); flex-shrink:0;}
+    .lm-title{ font-family:'Lalezar',sans-serif; font-size:19px; color:var(--gold); text-shadow:0 2px 6px rgba(0,0,0,0.6);}
+    .lm-close{ background:rgba(255,77,94,0.2); border:1px solid var(--danger); color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; cursor:pointer;}
+    .lm-land-banner{ padding:10px 16px; text-align:center; font-family:'Lalezar',sans-serif; font-size:16px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,0.7); flex-shrink:0; transition:background .3s; border-bottom:1px solid rgba(255,255,255,0.08);}
+    .level-map-scroll{ flex-grow:1; overflow-y:auto; position:relative; padding:30px 0 60px 0; }
+    .lm-land-section{ position:relative; padding:20px 0; }
+    .lm-land-divider{ text-align:center; font-family:'Lalezar',sans-serif; font-size:15px; color:var(--gold); margin:10px 0 20px 0; padding:8px; background:rgba(0,0,0,0.3); border-top:1px dashed rgba(255,201,77,0.4); border-bottom:1px dashed rgba(255,201,77,0.4);}
+    .lm-spine{ position:absolute; top:0; bottom:0; left:50%; width:4px; margin-left:-2px; background:repeating-linear-gradient(180deg, rgba(255,255,255,0.35) 0, rgba(255,255,255,0.35) 8px, transparent 8px, transparent 16px); z-index:0;}
+    .lm-node-row{ position:relative; display:flex; height:78px; align-items:center; z-index:1;}
+    .lm-node-wrap{ position:absolute; display:flex; flex-direction:column; align-items:center; width:70px; }
+    .lm-node{
+        width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+        font-family:'Lalezar',sans-serif; font-size:20px; color:#fff; position:relative; cursor:pointer;
+        border:3px solid rgba(255,255,255,0.25); box-shadow:0 4px 14px rgba(0,0,0,0.5); transition:transform .15s;
+    }
+    .lm-node:active{ transform:scale(0.9); }
+    .lm-node.locked{ background:linear-gradient(145deg,#463a5e,#2a1d44); color:#8a7fa8; border-color:rgba(255,255,255,0.1); cursor:default;}
+    .lm-node.done{ background:linear-gradient(145deg,#00e6a8,#00a884); border-color:#8affd6; box-shadow:0 4px 20px rgba(0,230,168,0.5);}
+    .lm-node.current{ background:linear-gradient(145deg,#ffd54f,#e6a53f); border-color:#fff; box-shadow:0 0 0 6px rgba(255,213,79,0.25), 0 6px 25px rgba(255,201,77,0.6); animation:lmPulse 1.6s infinite; color:#1a1250;}
+    @keyframes lmPulse{ 0%,100%{ box-shadow:0 0 0 6px rgba(255,213,79,0.25), 0 6px 25px rgba(255,201,77,0.6);} 50%{ box-shadow:0 0 0 12px rgba(255,213,79,0.1), 0 6px 30px rgba(255,201,77,0.8);} }
+    .lm-node-stars{ font-size:10px; margin-top:3px; white-space:nowrap;}
+    .lm-node .lm-lock-icon{ font-size:18px; }
+    .lm-connector{ position:absolute; height:3px; border-radius:2px; background:rgba(255,255,255,0.25); z-index:0; }
+    .lm-teaser{ text-align:center; color:var(--ink-dim); font-size:12px; padding:20px; opacity:0.7;}
 </style>
 </head>
 <body>
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-28-0100-menu-reorg</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-28-0330-journey-map</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -316,6 +347,17 @@
     <div class="chat-controls">
         <input type="text" id="chatInput" class="chat-input" placeholder="رسالة..." onkeypress="if(event.key === 'Enter') window.submitTextChat()" />
         <button class="chat-send" onclick="window.submitTextChat()">➡</button>
+    </div>
+</div>
+
+<div id="levelMapOverlay" class="modal hidden" style="z-index:10000;">
+    <div class="level-map-shell">
+        <div class="lm-header">
+            <span class="lm-title">&#x1F5FA; خريطة الرحلة</span>
+            <button class="lm-close" onclick="window.closeLevelMap()">✖</button>
+        </div>
+        <div id="lmLandBanner" class="lm-land-banner"></div>
+        <div id="levelMapScroll" class="level-map-scroll"><div id="levelMapContent" style="position:relative;"></div></div>
     </div>
 </div>
 
@@ -877,27 +919,94 @@ window.claimChallenge = function(id){
 };
 
 /* ============ خريطة المستويات ============ */
-window.openLevelMap = function(){
+/* ============ خريطة الرحلة: مسار بصري متعرّج عبر "بلدان" لا نهائية ============ */
+const MAP_LANDS = [
+    { name: '&#x1F36C; أرض السكر' },
+    { name: '&#x1F36B; مملكة الشوكولاتة' },
+    { name: '&#x1F36D; وادي المصاصات' },
+    { name: '&#x1F347; غابة العنب' },
+    { name: '&#x1F34B; صحراء الليمون' },
+    { name: '&#x1F353; جبال الفراولة' },
+    { name: '&#x1F33F; سهول النعناع' },
+    { name: '&#x2744;&#xFE0F; قمم السكر المثلج' },
+];
+const LEVELS_PER_LAND = 10;
+function landForLevel(lvl) {
+    let landIndex = Math.floor((lvl - 1) / LEVELS_PER_LAND);
+    let cycle = Math.floor(landIndex / MAP_LANDS.length);
+    let base = MAP_LANDS[landIndex % MAP_LANDS.length];
+    let name = base.name + (cycle > 0 ? ` (الجولة ${cycle + 1})` : '');
+    return { name, landIndex };
+}
+
+window.closeLevelMap = function() {
+    document.getElementById('levelMapOverlay').classList.add('hidden');
+};
+
+window.openLevelMap = function() {
     playSound('click');
     let curLevel = window.userData.level || 1;
     let stars = window.userData.levelStars || {};
-    let startLvl = Math.max(1, curLevel - 6);
-    let endLvl = curLevel + 6;
-    let html = '<div style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto;">';
-    for (let lvl = endLvl; lvl >= startLvl; lvl--) {
+    let startLvl = Math.max(1, curLevel - 8);
+    let endLvl = curLevel + 45;
+
+    let html = '<div class="lm-spine"></div>';
+    let currentLandIndex = -1;
+    let currentNodeId = null;
+
+    for (let lvl = startLvl; lvl <= endLvl; lvl++) {
+        let land = landForLevel(lvl);
+        if (land.landIndex !== currentLandIndex) {
+            currentLandIndex = land.landIndex;
+            html += `<div class="lm-land-divider">${land.name}<br><span style="font-size:11px; opacity:0.7;">المستويات ${land.landIndex*LEVELS_PER_LAND+1} - ${(land.landIndex+1)*LEVELS_PER_LAND}</span></div>`;
+        }
         let isDone = lvl < curLevel;
         let isCurrent = lvl === curLevel;
         let isLocked = lvl > curLevel;
         let lvlStars = stars[lvl] || 0;
-        let bg = isCurrent ? 'rgba(255,201,77,0.18); border-color:#ffc94d;' : isDone ? 'rgba(0,230,168,0.1); border-color:#00e6a8;' : 'rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.08); opacity:0.5;';
-        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-radius:10px; border:1px solid; background:${bg}">
-            <span style="font-weight:800; ${isCurrent?'color:#ffc94d;':''}">${isLocked?'&#x1F512; ':''}المستوى ${lvl} ${isCurrent?'(الحالي)':''}</span>
-            <span style="font-size:16px;">${isDone || isCurrent ? renderStars(lvlStars) : ''}</span>
+        let offset = 50 + 32 * Math.sin(lvl * 0.9);
+        let connLeft = offset < 50 ? offset : 50;
+        let connWidth = Math.abs(offset - 50);
+        let stateClass = isCurrent ? 'current' : isDone ? 'done' : 'locked';
+        let nodeId = `lmNode${lvl}`;
+        if (isCurrent) currentNodeId = nodeId;
+        html += `<div class="lm-node-row">
+            <div class="lm-connector" style="left:${connLeft}%; width:${connWidth}%; top:38px;"></div>
+            <div class="lm-node-wrap" style="left:calc(${offset}% - 35px);">
+                <div class="lm-node ${stateClass}" id="${nodeId}" onclick="window.selectMapLevel(${lvl})">
+                    ${isLocked ? '<span class="lm-lock-icon">&#x1F512;</span>' : lvl}
+                </div>
+                <div class="lm-node-stars">${(isDone || isCurrent) ? renderStars(lvlStars) : ''}</div>
+            </div>
         </div>`;
     }
-    html += '</div>';
-    AppModal.show({ title: "خريطة المستويات &#x1F5FA;", html: html, confirmText: "إغلاق" });
+    html += `<div class="lm-teaser">&#x1F30D; ولسه فيه بلاد ومستويات أكتر تنتظرك مع كل تقدم...</div>`;
+
+    document.getElementById('levelMapContent').innerHTML = html;
+    document.getElementById('lmLandBanner').innerHTML = landForLevel(curLevel).name;
+    document.getElementById('levelMapOverlay').classList.remove('hidden');
+
+    setTimeout(() => {
+        let node = document.getElementById(currentNodeId);
+        if (node) node.scrollIntoView({ block: 'center' });
+    }, 60);
 };
+
+window.selectMapLevel = function(lvl) {
+    let curLevel = window.userData.level || 1;
+    playSound('click');
+    if (lvl === curLevel) {
+        window.closeLevelMap();
+        if (document.getElementById('introPanel').style.display !== 'none') window.startSoloPlay();
+    } else if (lvl < curLevel) {
+        let lvlStars = (window.userData.levelStars && window.userData.levelStars[lvl]) || 0;
+        AppModal.alert(`المستوى ${lvl} — حصلت فيه على ${renderStars(lvlStars)} من قبل.<br>كمّل من المستوى الحالي (${curLevel}) عشان تتقدم في الخريطة.`);
+    } else {
+        AppModal.alert(`المستوى ${lvl} لسه مقفول &#x1F512;.<br>كمّل من المستوى الحالي (${curLevel}) الأول عشان توصله.`);
+    }
+};
+
+
 
 /* ============ لوحة أفضل النتائج (اللعب الفردي) ============ */
 window.openLeaderboard = function(){
