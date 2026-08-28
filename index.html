@@ -216,7 +216,7 @@
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-27-0130-intro-music</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-27-0355-music-fix</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -454,7 +454,8 @@ try {
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            startBackgroundMusic();
+            const intro = document.getElementById('introPanel');
+            if (intro && intro.style.display !== 'none') startBackgroundMusic();
         } catch(e) {}
     }, {once:true});
 } catch(e) {}
@@ -494,34 +495,52 @@ document.addEventListener('click', function(e) {
     if (btn) playThunder();
 });
 
-/* ============ موسيقى خلفية حماسية (مُولّدة برمجيًا، بدون ملفات خارجية) ============ */
+/* ============ موسيقى خلفية حماسية (مُولّدة برمجيًا، بدون ملفات خارجية) ============
+   بتشتغل بس في شاشة الترحيب/القوائم، وبتتوقف تلقائيًا لحظة بدء اللعب الفعلي (فردي أو معركة). */
 let musicOn = true;
 let musicScheduler = null;
 let musicStep = 0;
-const musicMelody = [523.25, 659.25, 783.99, 659.25, 523.25, 440, 523.25, 783.99];
-const musicBass = [130.81, 130.81, 164.81, 174.61];
+/* لحن مريح وحماسي (سلم صول الكبير) بموجة مثلثية ناعمة بدل الصوت الحاد، مع فلتر لتنعيم الطبقات العليا */
+const musicMelody = [392.00, 523.25, 587.33, 523.25, 440.00, 523.25, 392.00, 329.63, 392.00, 523.25, 659.25, 587.33, 523.25, 440.00, 392.00, 293.66];
+const musicBass   = [98.00, 98.00, 130.81, 130.81, 110.00, 110.00, 98.00, 87.31];
 function scheduleMusicStep() {
     try {
         if (!musicOn || !audioCtx || audioCtx.state !== 'running') return;
         const now = audioCtx.currentTime;
+
         const noteFreq = musicMelody[musicStep % musicMelody.length];
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.type = 'square'; osc.frequency.setValueAtTime(noteFreq, now);
-        gain.gain.setValueAtTime(0.028, now); gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.17);
-        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.18);
+        const osc = audioCtx.createOscillator(); const filt = audioCtx.createBiquadFilter(); const gain = audioCtx.createGain();
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(noteFreq, now);
+        filt.type = 'lowpass'; filt.frequency.setValueAtTime(2200, now);
+        gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.32);
+        osc.connect(filt); filt.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 0.33);
+
         if (musicStep % 2 === 0) {
             const bassFreq = musicBass[Math.floor(musicStep/2) % musicBass.length];
             const bosc = audioCtx.createOscillator(); const bgain = audioCtx.createGain();
-            bosc.type = 'triangle'; bosc.frequency.setValueAtTime(bassFreq, now);
-            bgain.gain.setValueAtTime(0.045, now); bgain.gain.exponentialRampToValueAtTime(0.0008, now + 0.33);
-            bosc.connect(bgain); bgain.connect(audioCtx.destination); bosc.start(now); bosc.stop(now + 0.35);
+            bosc.type = 'sine'; bosc.frequency.setValueAtTime(bassFreq, now);
+            bgain.gain.setValueAtTime(0.06, now); bgain.gain.exponentialRampToValueAtTime(0.0008, now + 0.5);
+            bosc.connect(bgain); bgain.connect(audioCtx.destination); bosc.start(now); bosc.stop(now + 0.5);
         }
+
+        /* نبضة هاي-هات خفيفة جدًا كل خطوتين عشان تدي إحساس إيقاعي حماسي بدون إزعاج */
+        if (musicStep % 2 === 1) {
+            const hatBuf = audioCtx.createBuffer(1, 800, audioCtx.sampleRate);
+            const d = hatBuf.getChannelData(0);
+            for (let i=0;i<800;i++) d[i] = (Math.random()*2-1) * (1 - i/800);
+            const hat = audioCtx.createBufferSource(); hat.buffer = hatBuf;
+            const hatFilt = audioCtx.createBiquadFilter(); hatFilt.type='highpass'; hatFilt.frequency.value=6000;
+            const hatGain = audioCtx.createGain(); hatGain.gain.setValueAtTime(0.025, now);
+            hat.connect(hatFilt); hatFilt.connect(hatGain); hatGain.connect(audioCtx.destination); hat.start(now);
+        }
+
         musicStep++;
     } catch(e) {}
 }
 function startBackgroundMusic() {
     if (musicScheduler || !musicOn) return;
-    musicScheduler = setInterval(scheduleMusicStep, 180);
+    musicScheduler = setInterval(scheduleMusicStep, 210);
 }
 function stopBackgroundMusic() { if (musicScheduler) { clearInterval(musicScheduler); musicScheduler = null; } }
 window.toggleMusic = function() {
@@ -530,6 +549,7 @@ window.toggleMusic = function() {
     if (musicOn) { startBackgroundMusic(); if (btn) btn.innerHTML = '&#x1F50A;'; }
     else { stopBackgroundMusic(); if (btn) btn.innerHTML = '&#x1F507;'; }
 };
+
 
 function playSound(type) {
     try {
@@ -1241,6 +1261,7 @@ function dayKey(d) { return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}
 window.startSoloPlay = function() {
     document.getElementById('introPanel').style.display = 'none';
     document.getElementById('grid').style.display = 'grid';
+    stopBackgroundMusic();
     playSound('win');
     initLevel();
 };
@@ -1762,6 +1783,7 @@ window.surrenderBattle = surrenderBattle;
 function startBotBattle(wager, botName, botFlag) {
     document.getElementById('introPanel').style.display = 'none';
     document.getElementById('grid').style.display = 'grid';
+    stopBackgroundMusic();
     window.userData.isSearching = false; update(ref(db, `users/${window.currentUser}`), { isSearching: false, searchWager: null });
     window.battleEnded = false; window.battleMode = true; window.isBotMatch = true; window.lastMsgId = 0; window.isWaitingForOpponent = false;
     window.botDone = false; window.playerDone = false; window.botScore = 0; window.botMoves = 25;
@@ -1827,6 +1849,7 @@ window.startBotBattle = startBotBattle;
 function startBattleMode(wager, opponent) {
     document.getElementById('introPanel').style.display = 'none';
     document.getElementById('grid').style.display = 'grid';
+    stopBackgroundMusic();
     window.userData.isSearching = false; update(ref(db, `users/${window.currentUser}`), { isSearching: false });
     window.battleEnded = false; window.battleMode = true; window.lastMsgId = 0; window.isWaitingForOpponent = false; document.getElementById('chatMessages').innerHTML = '';
     document.getElementById('chatPreviewBubble').classList.add('hidden'); document.getElementById('chatBadge').style.display = 'none';
