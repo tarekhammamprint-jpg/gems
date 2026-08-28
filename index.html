@@ -196,17 +196,19 @@
     /* صفحة الترحيب قبل بدء اللعب الفردي */
     .intro-panel{
         display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
-        width:95vw; max-width:340px; min-height:340px; padding:24px 18px; box-sizing:border-box;
+        width:95vw; max-width:340px; min-height:340px; padding:22px 16px; box-sizing:border-box;
         background:linear-gradient(160deg, rgba(74,20,140,0.5), rgba(26,18,80,0.5));
         border:2px solid var(--gold); border-radius:20px; box-shadow:0 0 40px rgba(255,201,77,0.25), inset 0 0 20px rgba(255,255,255,0.05);
     }
-    .intro-logo{ font-size:60px; animation:popSticker .8s cubic-bezier(0.175,0.885,0.32,1.275); margin-bottom:6px; text-shadow:0 0 25px var(--gold);}
-    .intro-title{ font-family:'Lalezar',sans-serif; font-size:24px; color:var(--gold); margin:6px 0; text-shadow:0 2px 8px rgba(0,0,0,0.6);}
-    .intro-sub{ font-size:13px; color:var(--ink-dim); margin-bottom:20px; line-height:1.6;}
+    .intro-logo{ font-size:52px; animation:popSticker .8s cubic-bezier(0.175,0.885,0.32,1.275); margin-bottom:2px; text-shadow:0 0 25px var(--gold);}
+    .intro-title{ font-family:'Lalezar',sans-serif; font-size:21px; color:var(--gold); margin:4px 0; text-shadow:0 2px 8px rgba(0,0,0,0.6);}
+    .intro-sub{ font-size:12px; color:var(--ink-dim); margin-bottom:14px; line-height:1.5;}
+    .intro-menu-grid{ display:grid; grid-template-columns:1fr 1fr; gap:7px; width:100%; margin-bottom:16px;}
+    .intro-menu-grid .btn-small{ width:100%; padding:9px 4px; font-size:12px;}
     .intro-play-btn{
-        background:linear-gradient(135deg,#00e6a8,#00a884); color:#012; border:none; padding:16px 30px; border-radius:14px;
-        font-weight:900; font-size:17px; cursor:pointer; font-family:'Cairo',sans-serif; box-shadow:0 6px 20px rgba(0,230,168,0.4);
-        transition:transform .15s; animation:pulseWager 2s infinite;
+        background:linear-gradient(135deg,#00e6a8,#00a884); color:#012; border:none; padding:15px 28px; border-radius:14px;
+        font-weight:900; font-size:16px; cursor:pointer; font-family:'Cairo',sans-serif; box-shadow:0 6px 20px rgba(0,230,168,0.4);
+        transition:transform .15s; animation:pulseWager 2s infinite; width:100%;
     }
     .intro-play-btn:active{ transform:scale(0.93);}
     #musicToggleBtn{ position:fixed; top:8px; left:8px; z-index:99999; background:rgba(0,0,0,0.55); border:1px solid var(--mint); color:#fff; border-radius:50%; width:36px; height:36px; font-size:16px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.5);}
@@ -216,7 +218,7 @@
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-27-0355-music-fix</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-28-0100-menu-reorg</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -246,13 +248,7 @@
     </div>
     <div class="action-btns">
         <button class="btn-small btn-support" id="supportBtn" onclick="window.claimSupport()">دعم 🆘</button>
-        <button class="btn-small btn-achievements" id="achBtn" onclick="window.openAchievements()">إنجازات 🏅</button>
-        <button class="btn-small btn-challenges" id="challengesBtn" onclick="window.openDailyChallenges()">تحديات 🎯</button>
-        <button class="btn-small" style="background:linear-gradient(135deg,#3fb8ff,#1a6ea8);" id="mapBtn" onclick="window.openLevelMap()">خريطة 🗺️</button>
-        <button class="btn-small" style="background:linear-gradient(135deg,#ffd54f,#c9971f);" id="leaderboardBtn" onclick="window.openLeaderboard()">الأفضل 🏆</button>
-        <button class="btn-small btn-spin" id="spinBtn" onclick="window.openSpinWheel()">عجلة الحظ 🎨</button>
-        <button style="background:linear-gradient(135deg,#9b59b6,#6c2f8c);" class="btn-small" id="randomBtn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
-        <button class="btn-small btn-menu" id="menuBtn" onclick="window.toggleSidebar()">اللعب مع الأصدقاء 👥</button>
+        <button class="btn-small" style="background:linear-gradient(135deg,#8e44ad,#5b2c73);" id="gameMenuBtn" onclick="window.openGameMenu()">☰ القائمة</button>
         <button class="btn-small btn-logout" id="logoutBtn" onclick="window.logout()">خروج</button>
         <button class="btn-small btn-surrender" id="surrenderBtn" onclick="window.surrenderBattle()">انسحاب 🏳</button>
     </div>
@@ -284,6 +280,15 @@
         <div class="intro-logo">&#x1F31F;</div>
         <h2 class="intro-title">أهلاً بيك في حلوى النجوم!</h2>
         <p class="intro-sub">اجمع الحلوى، افتح الصناديق، وتحدى أصدقاءك ⭐</p>
+        <div class="intro-menu-grid">
+            <button class="btn-small btn-achievements" id="achBtn" onclick="window.openAchievements()">إنجازات 🏅</button>
+            <button class="btn-small btn-challenges" id="challengesBtn" onclick="window.openDailyChallenges()">تحديات 🎯</button>
+            <button class="btn-small" style="background:linear-gradient(135deg,#3fb8ff,#1a6ea8);" id="mapBtn" onclick="window.openLevelMap()">خريطة 🗺️</button>
+            <button class="btn-small" style="background:linear-gradient(135deg,#ffd54f,#c9971f);" id="leaderboardBtn" onclick="window.openLeaderboard()">الأفضل 🏆</button>
+            <button class="btn-small btn-spin" id="spinBtn" onclick="window.openSpinWheel()">عجلة الحظ 🎨</button>
+            <button style="background:linear-gradient(135deg,#9b59b6,#6c2f8c);" class="btn-small" id="randomBtn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
+            <button class="btn-small btn-menu" id="menuBtn" style="grid-column:span 2;" onclick="window.toggleSidebar()">اللعب مع الأصدقاء 👥</button>
+        </div>
         <button class="intro-play-btn" onclick="window.startSoloPlay()">&#x1F3AE; ابدأ اللعب الفردي</button>
     </div>
     <div class="grid" id="grid" style="display:none;"></div>
@@ -1258,6 +1263,21 @@ window.challengeSelectedBot = challengeSelectedBot;
 /* ============ سلسلة الدخول اليومي ============ */
 function dayKey(d) { return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
 /* ============ بدء اللعب الفردي من صفحة الترحيب ============ */
+/* ============ القائمة الرئيسية (نسخة مصغّرة تظهر أثناء اللعب كمان، من غير ما نحتاج نرجع لشاشة الترحيب) ============ */
+window.openGameMenu = function() {
+    playSound('click');
+    let html = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <button class="um-btn" onclick="window.openAchievements()">إنجازات 🏅</button>
+        <button class="um-btn" onclick="window.openDailyChallenges()">تحديات 🎯</button>
+        <button class="um-btn" onclick="window.openLevelMap()">خريطة 🗺️</button>
+        <button class="um-btn" onclick="window.openLeaderboard()">الأفضل 🏆</button>
+        <button class="um-btn" onclick="window.openSpinWheel()">عجلة الحظ 🎨</button>
+        <button class="um-btn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
+        <button class="um-btn" style="grid-column:span 2;" onclick="window.toggleSidebar()">اللعب مع الأصدقاء 👥</button>
+    </div>`;
+    AppModal.show({ title: "القائمة الرئيسية &#x2630;", html: html, confirmText: "إغلاق" });
+};
+
 window.startSoloPlay = function() {
     document.getElementById('introPanel').style.display = 'none';
     document.getElementById('grid').style.display = 'grid';
@@ -1796,7 +1816,7 @@ function startBotBattle(wager, botName, botFlag) {
     targetLabel.innerHTML = `${getSafeFlag(botFlag)} ${botName}`; targetDisplay.innerText = "0"; targetDisplay.classList.add('vs-mode'); movesDisplay.innerHTML = moves;
 
     document.getElementById('menuBtn').style.display = 'none'; document.getElementById('logoutBtn').style.display = 'none';
-    document.getElementById('spinBtn').style.display = 'none'; document.getElementById('challengesBtn').style.display = 'none'; document.getElementById('achBtn').style.display = 'none'; document.getElementById('mapBtn').style.display = 'none'; document.getElementById('leaderboardBtn').style.display = 'none';
+    document.getElementById('spinBtn').style.display = 'none'; document.getElementById('challengesBtn').style.display = 'none'; document.getElementById('achBtn').style.display = 'none'; document.getElementById('mapBtn').style.display = 'none'; document.getElementById('leaderboardBtn').style.display = 'none'; document.getElementById('gameMenuBtn').style.display = 'none';
     document.getElementById('surrenderBtn').style.display = 'block'; document.getElementById('chatBtn').style.display = 'block';
 
     window.hasUsedSkill = false;
@@ -1860,7 +1880,7 @@ function startBattleMode(wager, opponent) {
     targetLabel.innerHTML = `${oppFlag} ${opponent}`; targetDisplay.innerText = "0"; targetDisplay.classList.add('vs-mode'); movesDisplay.innerHTML = moves;
 
     document.getElementById('menuBtn').style.display = 'none'; document.getElementById('logoutBtn').style.display = 'none';
-    document.getElementById('spinBtn').style.display = 'none'; document.getElementById('challengesBtn').style.display = 'none'; document.getElementById('achBtn').style.display = 'none'; document.getElementById('mapBtn').style.display = 'none'; document.getElementById('leaderboardBtn').style.display = 'none';
+    document.getElementById('spinBtn').style.display = 'none'; document.getElementById('challengesBtn').style.display = 'none'; document.getElementById('achBtn').style.display = 'none'; document.getElementById('mapBtn').style.display = 'none'; document.getElementById('leaderboardBtn').style.display = 'none'; document.getElementById('gameMenuBtn').style.display = 'none';
     document.getElementById('surrenderBtn').style.display = 'block'; document.getElementById('chatBtn').style.display = 'block';
 
     window.hasUsedSkill = false;
@@ -1977,6 +1997,7 @@ function restoreBattleUI(){
     document.getElementById('achBtn').style.display = 'block';
     document.getElementById('mapBtn').style.display = 'block';
     document.getElementById('leaderboardBtn').style.display = 'block';
+    document.getElementById('gameMenuBtn').style.display = 'block';
 }
 
 function updateMyBalance(amount) {
