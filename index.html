@@ -216,7 +216,7 @@
     /* ============ خريطة الرحلة (خريطة صماء بصرية بمسار متعرّج ولا نهاية للمستويات) ============ */
     .level-map-shell{
         width:94vw; max-width:400px; height:82vh; max-height:720px; background:linear-gradient(180deg,#1a1250,#0d0824);
-        border:2px solid var(--gold); border-radius:22px; overflow:hidden; display:flex; flex-direction:column;
+        border:2px solid var(--gold); border-radius:22px; overflow:hidden; display:flex; flex-direction:column; position:relative;
         box-shadow:0 20px 60px rgba(0,0,0,0.8);
     }
     .lm-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:1px solid var(--card-brd); flex-shrink:0;}
@@ -243,13 +243,26 @@
     .lm-node .lm-lock-icon{ font-size:18px; }
     .lm-connector{ position:absolute; height:3px; border-radius:2px; background:rgba(255,255,255,0.25); z-index:0; }
     .lm-teaser{ text-align:center; color:var(--ink-dim); font-size:12px; padding:20px; opacity:0.7;}
+    .lm-footer{ flex-shrink:0; padding:12px 16px 16px 16px; background:linear-gradient(0deg, rgba(0,0,0,0.5), transparent); border-top:1px solid var(--card-brd);}
+    .lm-next-btn{
+        width:100%; padding:15px; border:none; border-radius:14px; cursor:pointer; font-family:'Cairo',sans-serif;
+        font-weight:900; font-size:16px; color:#012;
+        background:linear-gradient(135deg,#ffd54f,#00e6a8,#ffd54f); background-size:200% 100%;
+        box-shadow:0 8px 24px rgba(255,213,79,0.5), 0 0 0 2px rgba(255,255,255,0.15) inset;
+        animation:lmNextGlow 2.4s ease-in-out infinite;
+    }
+    .lm-next-btn:active{ transform:scale(0.95);}
+    @keyframes lmNextGlow{ 0%{ background-position:0% 50%; box-shadow:0 8px 24px rgba(255,213,79,0.5), 0 0 0 2px rgba(255,255,255,0.15) inset;} 50%{ background-position:100% 50%; box-shadow:0 8px 34px rgba(0,230,168,0.6), 0 0 0 2px rgba(255,255,255,0.25) inset;} 100%{ background-position:0% 50%; box-shadow:0 8px 24px rgba(255,213,79,0.5), 0 0 0 2px rgba(255,255,255,0.15) inset;} }
+    .lm-celebrate-banner{ position:absolute; top:0; left:0; right:0; z-index:5; text-align:center; padding:14px; font-family:'Lalezar',sans-serif; font-size:20px; color:#fff; background:linear-gradient(135deg,#ff3d78,#9b59b6); animation:lmCelebrateIn .5s cubic-bezier(0.175,0.885,0.32,1.275), lmCelebrateOut .5s ease-in 2.3s forwards; box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+    @keyframes lmCelebrateIn{ 0%{ transform:translateY(-100%); opacity:0;} 100%{ transform:translateY(0); opacity:1;} }
+    @keyframes lmCelebrateOut{ 0%{ transform:translateY(0); opacity:1;} 100%{ transform:translateY(-100%); opacity:0;} }
 </style>
 </head>
 <body>
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-29-0130-calm-music-score</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-30-0200-map-celebration</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -358,6 +371,9 @@
         </div>
         <div id="lmLandBanner" class="lm-land-banner"></div>
         <div id="levelMapScroll" class="level-map-scroll"><div id="levelMapContent" style="position:relative;"></div></div>
+        <div class="lm-footer">
+            <button class="lm-next-btn" id="lmNextBtn" onclick="window.selectMapLevel(window.userData.level)">&#x1F680; ابدأ المستوى القادم</button>
+        </div>
     </div>
 </div>
 
@@ -951,7 +967,7 @@ window.closeLevelMap = function() {
     document.getElementById('levelMapOverlay').classList.add('hidden');
 };
 
-window.openLevelMap = function() {
+window.openLevelMap = function(celebratory) {
     playSound('click');
     let curLevel = window.userData.level || 1;
     let stars = window.userData.levelStars || {};
@@ -999,6 +1015,16 @@ window.openLevelMap = function() {
     document.getElementById('levelMapContent').innerHTML = html;
     document.getElementById('lmLandBanner').innerHTML = landForLevel(curLevel).name;
     document.getElementById('levelMapOverlay').classList.remove('hidden');
+
+    if (celebratory) {
+        playSound('win'); fireConfetti(50);
+        let shell = document.querySelector('.level-map-shell');
+        let banner = document.createElement('div');
+        banner.className = 'lm-celebrate-banner';
+        banner.innerHTML = '&#x1F389; مستوى جديد اتفتح! &#x1F389;';
+        shell.appendChild(banner);
+        setTimeout(() => { if (banner.parentNode) banner.parentNode.removeChild(banner); }, 2900);
+    }
 
     setTimeout(() => {
         let node = document.getElementById(currentNodeId);
@@ -2175,7 +2201,7 @@ function openTreasureBox() {
         html: `<div style="font-size:70px; animation: popSticker .6s cubic-bezier(0.175,0.885,0.32,1.275);">&#x1F4E6;</div>
                <h3 style="color:#ffc94d; margin:5px 0;">فتحت صندوق كنز!</h3>
                <p>وجدت <strong style="color:#8affd6">+${STAR}${reward}</strong> بداخله!</p>`,
-        confirmText: "رائع! &#x1F970;", onConfirm: initLevel
+        confirmText: "رائع! &#x1F970;", onConfirm: () => window.openLevelMap(true)
     });
 }
 function updateObjectiveBanner() {
@@ -2477,7 +2503,7 @@ function checkAllMatches(isInit = false) {
                                ${isNewRecord ? '<p style="color:#ffc94d;">&#x1F3C6; رقم قياسي شخصي جديد!</p>' : ''}
                                <p>ربحت <strong style="color:#8affd6">+${STAR}${reward}</strong></p>`,
                         confirmText: "المستوى التالي &#x27A1;",
-                        onConfirm: () => { if (showTreasure) openTreasureBox(); else initLevel(); }
+                        onConfirm: () => { if (showTreasure) openTreasureBox(); else window.openLevelMap(true); }
                     });
                 } else {
                     playSound('error');
