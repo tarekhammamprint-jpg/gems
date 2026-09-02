@@ -262,7 +262,7 @@
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-08-31-0200-nextlevel-reset-fix</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-09-01-0500-real-auth</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -393,6 +393,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, updateEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBGwo-ds88ucY9MTDxx7x_rPppnThvjiGc",
@@ -405,7 +406,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 const STAR = '⭐';
+
+/* تحويل اسم المستخدم لصيغة إيميل صالحة لـ Firebase Authentication
+   (Firebase Auth بيتطلب إيميل حتى لو نظام الدخول عندنا بالاسم بس). */
+function usernameToAuthEmail(username) {
+    let safe = username.toLowerCase().trim().replace(/[^a-z0-9_.-]/g, '_');
+    return `${safe}@stargame-users.app`;
+}
 
 /* ============ تشفير كلمات المرور (SHA-256 + Salt) ============
    ملاحظة أمان: هذا تطبيق client-only بدون سيرفر خاص، لذلك التشفير هنا
@@ -781,21 +790,24 @@ window.editUserName = function(e) {
     AppModal.show({
         title: "تعديل الاسم &#x270E;", type: 'prompt', inputType: 'text', placeholder: "الاسم الجديد...",
         showCancel: true, confirmText: "حفظ التغيير &#x2705;",
-        onConfirm: (newName) => {
+        onConfirm: async (newName) => {
             newName = newName.trim();
             if(!newName || newName === window.currentUser) return;
-            get(ref(db, `users/${newName}`)).then(snap => {
-                if(snap.exists()) { AppModal.alert("هذا الاسم مستخدم مسبقاً، يرجى اختيار اسم آخر."); }
-                else {
-                    let oldData = {...window.userData};
-                    set(ref(db, `users/${newName}`), oldData).then(() => {
-                        remove(ref(db, `users/${window.currentUser}`));
-                        window.currentUser = newName;
-                        localStorage.setItem('candyUser', newName);
-                        document.getElementById('playerName').innerText = newName;
-                        AppModal.alert("تم تغيير الاسم بنجاح!");
-                    });
-                }
+            let snap = await get(ref(db, `users/${newName}`));
+            if(snap.exists()) { AppModal.alert("هذا الاسم مستخدم مسبقاً، يرجى اختيار اسم آخر."); return; }
+            try {
+                if (auth.currentUser) await updateEmail(auth.currentUser, usernameToAuthEmail(newName));
+            } catch (err) {
+                if (err.code === 'auth/requires-recent-login') { AppModal.alert("عشان تغيّر الاسم، لازم تسجّل خروج وتدخل تاني الأول."); return; }
+                AppModal.alert("حصلت مشكلة أثناء تغيير الاسم. جرّب تاني."); return;
+            }
+            let oldData = {...window.userData};
+            set(ref(db, `users/${newName}`), oldData).then(() => {
+                remove(ref(db, `users/${window.currentUser}`));
+                window.currentUser = newName;
+                localStorage.setItem('candyUser', newName);
+                document.getElementById('playerName').innerText = newName;
+                AppModal.alert("تم تغيير الاسم بنجاح!");
             });
         }
     });
@@ -810,13 +822,23 @@ window.editPassword = function(e) {
         onConfirm: async (newPass) => {
             newPass = newPass.trim();
             if(!newPass) return;
-            let salt = window.userData.salt || generateSalt();
-            let newHash = await hashPassword(newPass, salt);
-            update(ref(db, `users/${window.currentUser}`), { passwordHash: newHash, salt: salt }).then(() => {
-                localStorage.setItem('candyPass', newPass);
-                window.userData.passwordHash = newHash; window.userData.salt = salt;
-                AppModal.alert("تم تغيير كلمة المرور بنجاح!");
-            });
+            try {
+                if (auth.currentUser) {
+                    await updatePassword(auth.currentUser, newPass);
+                    localStorage.setItem('candyPass', newPass);
+                    AppModal.alert("تم تغيير كلمة المرور بنجاح!");
+                } else {
+                    AppModal.alert("لازم تسجّل دخول تاني الأول عشان تقدر تغيّر كلمة المرور.");
+                }
+            } catch (err) {
+                if (err.code === 'auth/requires-recent-login') {
+                    AppModal.alert("عشان تغيّر كلمة المرور، لازم تسجّل خروج وتدخل تاني الأول.");
+                } else if (err.code === 'auth/weak-password') {
+                    AppModal.alert("كلمة المرور قصيرة جدًا، لازم 6 حروف/أرقام على الأقل.");
+                } else {
+                    AppModal.alert("حصلت مشكلة أثناء تغيير كلمة المرور. جرّب تاني.");
+                }
+            }
         }
     });
 };
@@ -1234,8 +1256,63 @@ function displayLoginModal() {
     });
 }
 
+/* توحيد القيم الافتراضية لأي حساب (قديم أو جديد) في مكان واحد */
+function fillUserDataDefaults(data) {
+    if(data.balance === undefined) data.balance = data.totalScore || 100;
+    if(data.battlesPlayed === undefined) data.battlesPlayed = 0;
+    if(data.lastSupportTime === undefined) data.lastSupportTime = 0;
+    if(data.soloGamesPlayed === undefined) data.soloGamesPlayed = 0;
+    if(data.lastSpinTime === undefined) data.lastSpinTime = 0;
+    if(data.lastGiftTime === undefined) data.lastGiftTime = 0;
+    if(data.achievements === undefined) data.achievements = {};
+    if(data.totalWins === undefined) data.totalWins = 0;
+    if(data.bestCombo === undefined) data.bestCombo = 0;
+    if(data.giftsSent === undefined) data.giftsSent = 0;
+    if(data.bestSoloScore === undefined) data.bestSoloScore = 0;
+    if(data.levelStars === undefined) data.levelStars = {};
+    if(data.loginStreak === undefined) data.loginStreak = 0;
+    if(data.lastLoginDate === undefined) data.lastLoginDate = null;
+    return data;
+}
+
+function newAccountData(uid, myFlag) {
+    return { authUid: uid, level: 1, balance: 100, battlesPlayed: 0, soloGamesPlayed: 0, online: true, banned: false, flag: myFlag, isSearching: false, lastSupportTime: 0, lastSpinTime: 0, lastGiftTime: 0, achievements: {}, totalWins: 0, bestCombo: 0, giftsSent: 0, bestSoloScore: 0, levelStars: {}, loginStreak: 0, lastLoginDate: null };
+}
+
+function finishLogin(user, pass, myFlag, data) {
+    localStorage.setItem('candyUser', user); localStorage.setItem('candyPass', pass);
+    fillUserDataDefaults(data);
+    data.flag = getSafeFlag(data.flag || myFlag);
+    update(ref(db, `users/${user}`), { flag: data.flag, isSearching: false, online: true }).catch(e=>console.log(e));
+    window.currentUser = user; window.userData = data; AppModal.close(); startGame();
+}
+
+/* ============ تسجيل الدخول: Firebase Authentication حقيقي، مع ترقية تلقائية للحسابات القديمة ============ */
 async function processLogin(user, pass) {
     let myFlag = await fetchUserFlag();
+    let authEmail = usernameToAuthEmail(user);
+
+    try {
+        let cred = await signInWithEmailAndPassword(auth, authEmail, pass);
+        let snap = await get(ref(db, `users/${user}`));
+        if (!snap.exists()) { finishLogin(user, pass, myFlag, newAccountData(cred.user.uid, myFlag)); return; }
+        let data = snap.val();
+        if (data.banned) {
+            localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
+            AppModal.alert("تم حظر هذا الحساب نهائياً من قبل الإدارة! &#x1F6AB;");
+            return;
+        }
+        finishLogin(user, pass, myFlag, data);
+        return;
+    } catch (authErr) {
+        if (authErr.code === 'auth/wrong-password') {
+            localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
+            AppModal.alert("كلمة المرور خاطئة يا صديقي!");
+            displayLoginModal();
+            return;
+        }
+    }
+
     get(ref(db, `users/${user}`)).then(async (snap) => {
         if (snap.exists()) {
             let data = snap.val();
@@ -1244,51 +1321,42 @@ async function processLogin(user, pass) {
                 return AppModal.alert("تم حظر هذا الحساب نهائياً من قبل الإدارة! &#x1F6AB;");
             }
 
-            // توافق مع الحسابات القديمة المخزنة بنص صريح: نقوم بترقيتها تلقائياً لتشفير آمن
             let passOk = false;
             if (data.passwordHash && data.salt) {
                 let attemptHash = await hashPassword(pass, data.salt);
                 passOk = (attemptHash === data.passwordHash);
             } else if (data.password) {
                 passOk = (data.password === pass);
-                if (passOk) {
-                    let newSalt = generateSalt();
-                    let newHash = await hashPassword(pass, newSalt);
-                    data.passwordHash = newHash; data.salt = newSalt;
-                    update(ref(db, `users/${user}`), { passwordHash: newHash, salt: newSalt, password: null }).catch(e=>console.log(e));
-                }
             }
 
-            if (passOk) {
-                localStorage.setItem('candyUser', user); localStorage.setItem('candyPass', pass);
-                if(data.balance === undefined) data.balance = data.totalScore || 100;
-                if(data.battlesPlayed === undefined) data.battlesPlayed = 0;
-                if(data.lastSupportTime === undefined) data.lastSupportTime = 0;
-                if(data.soloGamesPlayed === undefined) data.soloGamesPlayed = 0;
-                if(data.lastSpinTime === undefined) data.lastSpinTime = 0;
-                if(data.lastGiftTime === undefined) data.lastGiftTime = 0;
-                if(data.achievements === undefined) data.achievements = {};
-                if(data.totalWins === undefined) data.totalWins = 0;
-                if(data.bestCombo === undefined) data.bestCombo = 0;
-                if(data.giftsSent === undefined) data.giftsSent = 0;
-                if(data.bestSoloScore === undefined) data.bestSoloScore = 0;
-                if(data.levelStars === undefined) data.levelStars = {};
-                if(data.loginStreak === undefined) data.loginStreak = 0;
-                if(data.lastLoginDate === undefined) data.lastLoginDate = null;
-                data.flag = getSafeFlag(data.flag || myFlag);
-                update(ref(db, `users/${user}`), { flag: data.flag, isSearching: false, online: true }).catch(e=>console.log(e));
-                window.currentUser = user; window.userData = data; AppModal.close(); startGame();
-            } else {
+            if (!passOk) {
                 localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
                 AppModal.alert("كلمة المرور خاطئة يا صديقي!");
                 displayLoginModal();
+                return;
+            }
+
+            try {
+                let cred = await createUserWithEmailAndPassword(auth, authEmail, pass);
+                update(ref(db, `users/${user}`), { passwordHash: null, salt: null, password: null, authUid: cred.user.uid }).catch(e=>console.log(e));
+                data.authUid = cred.user.uid;
+                finishLogin(user, pass, myFlag, data);
+            } catch (createErr) {
+                AppModal.alert("حصلت مشكلة أثناء ترقية حسابك للنظام الآمن الجديد. جرّب تاني.");
+                displayLoginModal();
             }
         } else {
-            localStorage.setItem('candyUser', user); localStorage.setItem('candyPass', pass);
-            let salt = generateSalt();
-            let passwordHash = await hashPassword(pass, salt);
-            let newData = { passwordHash, salt, level: 1, balance: 100, battlesPlayed: 0, soloGamesPlayed: 0, online: true, banned: false, flag: myFlag, isSearching: false, lastSupportTime: 0, lastSpinTime: 0, lastGiftTime: 0, achievements: {}, totalWins: 0, bestCombo: 0, giftsSent: 0, bestSoloScore: 0, levelStars: {}, loginStreak: 0, lastLoginDate: null };
-            set(ref(db, `users/${user}`), newData); window.currentUser = user; window.userData = newData; AppModal.close(); startGame();
+            try {
+                let cred = await createUserWithEmailAndPassword(auth, authEmail, pass);
+                let newData = newAccountData(cred.user.uid, myFlag);
+                set(ref(db, `users/${user}`), newData);
+                localStorage.setItem('candyUser', user); localStorage.setItem('candyPass', pass);
+                window.currentUser = user; window.userData = newData; AppModal.close(); startGame();
+            } catch (createErr) {
+                if (createErr.code === 'auth/weak-password') AppModal.alert("كلمة المرور قصيرة جدًا، لازم 6 حروف/أرقام على الأقل.");
+                else AppModal.alert("حصلت مشكلة أثناء إنشاء الحساب. جرّب اسم مستخدم تاني.");
+                displayLoginModal();
+            }
         }
     }).catch(() => { displayLoginModal(); });
 }
@@ -1297,6 +1365,7 @@ showLoginScreen();
 
 function logout() {
     localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
+    try { signOut(auth); } catch(e) {}
     if(window.currentUser) set(ref(db, `users/${window.currentUser}/online`), false).then(() => location.reload());
     else location.reload();
 }
