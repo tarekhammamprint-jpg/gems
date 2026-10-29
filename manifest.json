@@ -1,0 +1,19 @@
+{
+  "name": "حلوى النجوم: مطابقة ومعارك عربية",
+  "short_name": "حلوى النجوم",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#160a2e",
+  "theme_color": "#160a2e",
+  "description": "لعبة مطابقة حلوى عربية سريعة مع تحديات ومعارك.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

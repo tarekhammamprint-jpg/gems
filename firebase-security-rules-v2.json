@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "users": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid == newData.child(\"authUid\").val()",
+        "password": {
+          ".validate": "false"
+        },
+        "passwordHash": {
+          ".validate": "false"
+        },
+        "salt": {
+          ".validate": "false"
+        }
+      }
+    }
+  }
+}

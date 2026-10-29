@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="ar" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>حلوى النجوم ⭐ - نظام المعارك الاحترافي</title>
+<title>حلوى النجوم: مطابقة ومعارك عربية ⭐</title>
+<meta name="description" content="حلوى النجوم: لعبة مطابقة حلوى عربية سريعة، العب فورًا كضيف وتحدى أصدقاءك." />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#160a2e" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -173,6 +176,14 @@
     .btn-secondary:active{ transform:scale(0.95);}
     .login-guide{ background:rgba(0,0,0,0.25); border-radius:10px; padding:13px; margin-bottom:15px; text-align:right; font-size:13px; line-height:1.7; color:#ddd; border-right:3px solid var(--mint);}
     .login-guide span{ color:var(--gold); font-weight:800;}
+    .social-login-title{font-size:12px;color:#c9bfe6;margin:12px 0 7px;position:relative}
+    .social-login-title:before,.social-login-title:after{content:"";display:inline-block;width:24%;height:1px;background:rgba(255,255,255,.2);vertical-align:middle;margin:0 8px}
+    .social-login-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+    .social-login-btn,.guest-login-btn{border:0;border-radius:10px;padding:11px 8px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;color:#fff;font-size:12px}
+    .google-login-btn{background:#fff;color:#202124}.facebook-login-btn{background:#1877f2}.guest-login-btn{width:100%;background:linear-gradient(135deg,#00e6a8,#008f72);font-size:14px}
+    .login-note{font-size:11px;color:#aaa;margin:8px 0 0;line-height:1.5}
+    .first-play-badge{display:inline-block;background:rgba(0,230,168,.15);color:#8affd6;border:1px solid rgba(0,230,168,.35);border-radius:20px;padding:5px 10px;font-size:11px;margin-top:6px}
+
     .wait-spinner{ border:4px solid rgba(255,255,255,0.1); border-top:4px solid var(--gold); border-radius:50%; width:42px; height:42px; animation:spin 1s linear infinite; margin:15px auto;}
     @keyframes spin{ to{ transform:rotate(360deg); } }
 
@@ -262,7 +273,7 @@
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-09-01-0500-real-auth</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-10-30-guest-social-auth</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -322,8 +333,9 @@
 <div class="game-area">
     <div id="introPanel" class="intro-panel">
         <div class="intro-logo">&#x1F31F;</div>
-        <h2 class="intro-title">أهلاً بيك في حلوى النجوم!</h2>
-        <p class="intro-sub">اجمع الحلوى، افتح الصناديق، وتحدى أصدقاءك ⭐</p>
+        <h2 class="intro-title">حلوى النجوم ⭐</h2>
+        <p class="intro-sub">طابق الحلوى، اصنع الكومبو، وتحدى أصدقاءك في دقيقة واحدة.</p>
+        <span class="first-play-badge">لعب سريع • بدون انتظار</span>
         <div class="intro-menu-grid">
             <button class="btn-small btn-achievements" id="achBtn" onclick="window.openAchievements()">إنجازات 🏅</button>
             <button class="btn-small btn-challenges" id="challengesBtn" onclick="window.openDailyChallenges()">تحديات 🎯</button>
@@ -333,7 +345,7 @@
             <button style="background:linear-gradient(135deg,#9b59b6,#6c2f8c);" class="btn-small" id="randomBtn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
             <button class="btn-small btn-menu" id="menuBtn" style="grid-column:span 2;" onclick="window.toggleSidebar()">اللعب مع الأصدقاء 👥</button>
         </div>
-        <button class="intro-play-btn" onclick="window.startSoloPlay()">&#x1F3AE; ابدأ اللعب الفردي</button>
+        <button class="intro-play-btn" onclick="window.startSoloPlay()">&#x1F3AE; العب الآن مجانًا</button>
     </div>
     <div class="grid" id="grid" style="display:none;"></div>
     <div class="skill-bar" id="skillBar" style="display:none;">
@@ -393,7 +405,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, updateEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, updateEmail, signOut, signInAnonymously, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBGwo-ds88ucY9MTDxx7x_rPppnThvjiGc",
@@ -1245,8 +1257,15 @@ function showLoginScreen() {
 function displayLoginModal() {
     AppModal.show({
         title: "حلوى النجوم &#x1F31F;",
-        html: `<div class="login-guide"><strong>كيف تبدأ اللعب؟</strong><br>1. اكتب <span>اسم مستخدم</span>.<br>2. اكتب <span>كلمة مرور</span>.<br>3. اضغط دخول.<br>&#x1F381; <span>هدية:</span> ${STAR}100 للمبتدئين!</div>`,
-        type: 'login', confirmText: "دخول / تسجيل حساب", autoClose: false,
+        html: `<div class="login-guide"><strong>ابدأ اللعب خلال ثوانٍ</strong><br>يمكنك اللعب كضيف فورًا، أو حفظ تقدمك مع Google / Facebook.<br>&#x1F381; <span>هدية البداية:</span> ${STAR}100 للمبتدئين!</div>
+               <div class="social-login-title">دخول سريع وحفظ التقدم</div>
+               <div class="social-login-grid">
+                 <button class="social-login-btn google-login-btn" onclick="window.loginWithGoogle()">G&nbsp; Google</button>
+                 <button class="social-login-btn facebook-login-btn" onclick="window.loginWithFacebook()">f&nbsp; Facebook</button>
+               </div>
+               <button class="guest-login-btn" onclick="window.loginAsGuest()">&#x1F3AE; العب كضيف الآن</button>
+               <p class="login-note">يمكنك ربط حساب الضيف لاحقًا. الدخول التقليدي متاح بالأسفل.</p>`,
+        type: 'login', confirmText: "دخول باسم مستخدم", autoClose: false,
         onConfirm: (user, pass) => {
             if (!user || !pass) { AppModal.alert("يرجى كتابة اسم المستخدم وكلمة المرور أولاً!"); displayLoginModal(); return; }
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -1288,6 +1307,59 @@ function finishLogin(user, pass, myFlag, data) {
 }
 
 /* ============ تسجيل الدخول: Firebase Authentication حقيقي، مع ترقية تلقائية للحسابات القديمة ============ */
+async function finishAuthUser(authUser, preferredName) {
+    const myFlag = await fetchUserFlag();
+    let safeBase = (preferredName || authUser.displayName || 'player').trim().replace(/[^\w\u0600-\u06ff-]+/g, '_').slice(0, 28) || 'player';
+    // Stable provider identity prevents duplicate accounts when the display name changes.
+    const user = `player_${authUser.uid.slice(0, 10)}`;
+    const userRef = ref(db, `users/${user}`);
+    const snap = await get(userRef);
+    let data = snap.exists() ? snap.val() : newAccountData(authUser.uid, myFlag);
+    if (data.banned) throw new Error('banned');
+    data.authUid = authUser.uid;
+    data.displayName = data.displayName || safeBase;
+    data.flag = getSafeFlag(data.flag || myFlag);
+    fillUserDataDefaults(data);
+    await set(userRef, data);
+    localStorage.setItem('candyUser', user);
+    localStorage.removeItem('candyPass');
+    localStorage.removeItem('candyGuest');
+    localStorage.setItem('candySocial', '1');
+    window.currentUser = user; window.userData = data;
+    AppModal.close(); startGame();
+}
+async function loginWithProvider(provider) {
+    try {
+        AppModal.show({title:'جاري تسجيل الدخول...', html:'<div class="wait-spinner"></div><p>لحظة ونبدأ اللعب.</p>', autoClose:false, showCancel:false});
+        const cred = await signInWithPopup(auth, provider);
+        await finishAuthUser(cred.user);
+    } catch (err) {
+        console.error(err);
+        AppModal.alert(err.code === 'auth/popup-blocked' ? 'المتصفح منع نافذة الدخول. اسمح بالنوافذ المنبثقة أو استخدم الدخول كضيف.' : 'تعذر إكمال الدخول. تأكد من تفعيل Google أو Facebook من Firebase Console.');
+        displayLoginModal();
+    }
+}
+window.loginWithGoogle = () => loginWithProvider(new GoogleAuthProvider());
+window.loginWithFacebook = () => loginWithProvider(new FacebookAuthProvider());
+window.loginAsGuest = async function() {
+    try {
+        AppModal.show({title:'جاري تجهيز اللعب...', html:'<div class="wait-spinner"></div>', autoClose:false, showCancel:false});
+        const cred = await signInAnonymously(auth);
+        const user = `guest_${cred.user.uid.slice(0, 10)}`;
+        const userRef = ref(db, `users/${user}`);
+        const snap = await get(userRef);
+        const myFlag = await fetchUserFlag();
+        const data = snap.exists() ? snap.val() : newAccountData(cred.user.uid, myFlag);
+        data.isGuest = true; data.displayName = data.displayName || 'ضيف'; fillUserDataDefaults(data);
+        await set(userRef, data);
+        localStorage.setItem('candyUser', user); localStorage.setItem('candyGuest', '1'); localStorage.removeItem('candyPass');
+        localStorage.removeItem('candySocial');
+        window.currentUser = user; window.userData = data; AppModal.close(); startGame();
+    } catch (err) {
+        console.error(err); AppModal.alert('تعذر الدخول كضيف. تأكد من تفعيل Anonymous في Firebase Authentication.'); displayLoginModal();
+    }
+};
+
 async function processLogin(user, pass) {
     let myFlag = await fetchUserFlag();
     let authEmail = usernameToAuthEmail(user);
@@ -1361,8 +1433,20 @@ async function processLogin(user, pass) {
     }).catch(() => { displayLoginModal(); });
 }
 
-showLoginScreen();
-
+(async function resumeSavedSession(){
+    const savedUser = localStorage.getItem('candyUser');
+    const savedPass = localStorage.getItem('candyPass');
+    const savedGuest = localStorage.getItem('candyGuest');
+    if (savedGuest && savedUser) {
+        try {
+            const cred = auth.currentUser || (await signInAnonymously(auth));
+            const snap = await get(ref(db, `users/${savedUser}`));
+            if (snap.exists()) { window.currentUser=savedUser; window.userData=snap.val(); startGame(); return; }
+        } catch(e) { console.warn(e); }
+    }
+    if (savedUser && savedPass) { showLoginScreen(); return; }
+    displayLoginModal();
+})();
 function logout() {
     localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
     try { signOut(auth); } catch(e) {}
@@ -1536,7 +1620,7 @@ function checkDailyStreak() {
 }
 
 function startGame() {
-    document.getElementById('playerName').innerText = window.currentUser;
+    document.getElementById('playerName').innerText = window.userData.displayName || window.currentUser;
     document.getElementById('playerFlag').innerHTML = getSafeFlag(window.userData.flag);
     remove(ref(db, `users/${window.currentUser}/battle`));
     ensureDailyChallenges();
@@ -1606,7 +1690,7 @@ function startGame() {
                     onCancel: () => { AppModal.close(); }
                 });
             }
-        }, 25000);
+        }, 60000);
     }
 }
 
@@ -2321,7 +2405,7 @@ function handleInputStart(e) {
     dragStartX = e.clientX; dragStartY = e.clientY;
 }
 
-/* الشبكة الآن دايمًا LTR (بعد إزالة dir="rtl" من الصفحة)، فحساب الجار المجاور
+/* حساب الجار المجاور
    برقم الفهرس مباشرة بقى مضمون ومطابق للشكل المرئي — أبسط وأكثر ثباتًا من الحساب الهندسي. */
 function handleInputEnd(e) {
     if (moves <= 0 || isAnimating || dragStartIndex === null) { dragStartIndex = null; return; }
@@ -2595,6 +2679,7 @@ function checkAllMatches(isInit = false) {
     }
 }
 
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(()=>{});
 </script>
 </body>
 </html>
