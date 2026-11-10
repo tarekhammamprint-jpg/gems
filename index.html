@@ -176,12 +176,12 @@
     .btn-secondary:active{ transform:scale(0.95);}
     .login-guide{ background:rgba(0,0,0,0.25); border-radius:10px; padding:13px; margin-bottom:15px; text-align:right; font-size:13px; line-height:1.7; color:#ddd; border-right:3px solid var(--mint);}
     .login-guide span{ color:var(--gold); font-weight:800;}
-    .social-login-title{font-size:12px;color:#c9bfe6;margin:12px 0 7px;position:relative}
-    .social-login-title:before,.social-login-title:after{content:"";display:inline-block;width:24%;height:1px;background:rgba(255,255,255,.2);vertical-align:middle;margin:0 8px}
-    .social-login-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-    .social-login-btn,.guest-login-btn{border:0;border-radius:10px;padding:11px 8px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;color:#fff;font-size:12px}
-    .google-login-btn{background:#fff;color:#202124}.facebook-login-btn{background:#1877f2}.guest-login-btn{width:100%;background:linear-gradient(135deg,#00e6a8,#008f72);font-size:14px}
+    .login-choice{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+    .guest-login-btn{border:0;border-radius:12px;padding:13px 10px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;color:#fff;font-size:15px;width:100%;background:linear-gradient(135deg,#00e6a8,#008f72);box-shadow:0 5px 14px rgba(0,230,168,.22)}
+    .login-divider{display:flex;align-items:center;gap:8px;color:#9e94b9;font-size:11px;margin:3px 0}
+    .login-divider:before,.login-divider:after{content:"";height:1px;background:rgba(255,255,255,.18);flex:1}
     .login-note{font-size:11px;color:#aaa;margin:8px 0 0;line-height:1.5}
+    .login-input-hint{font-size:11px;color:#9e94b9;margin:-6px 0 11px}
     .first-play-badge{display:inline-block;background:rgba(0,230,168,.15);color:#8affd6;border:1px solid rgba(0,230,168,.35);border-radius:20px;padding:5px 10px;font-size:11px;margin-top:6px}
 
     .wait-spinner{ border:4px solid rgba(255,255,255,0.1); border-top:4px solid var(--gold); border-radius:50%; width:42px; height:42px; animation:spin 1s linear infinite; margin:15px auto;}
@@ -273,7 +273,7 @@
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-10-30-guest-social-auth</div>
+<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-11-10-simple-login</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -405,7 +405,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, updateEmail, signOut, signInAnonymously, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, updateEmail, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBGwo-ds88ucY9MTDxx7x_rPppnThvjiGc",
@@ -1257,15 +1257,13 @@ function showLoginScreen() {
 function displayLoginModal() {
     AppModal.show({
         title: "حلوى النجوم &#x1F31F;",
-        html: `<div class="login-guide"><strong>ابدأ اللعب خلال ثوانٍ</strong><br>يمكنك اللعب كضيف فورًا، أو حفظ تقدمك مع Google / Facebook.<br>&#x1F381; <span>هدية البداية:</span> ${STAR}100 للمبتدئين!</div>
-               <div class="social-login-title">دخول سريع وحفظ التقدم</div>
-               <div class="social-login-grid">
-                 <button class="social-login-btn google-login-btn" onclick="window.loginWithGoogle()">G&nbsp; Google</button>
-                 <button class="social-login-btn facebook-login-btn" onclick="window.loginWithFacebook()">f&nbsp; Facebook</button>
-               </div>
-               <button class="guest-login-btn" onclick="window.loginAsGuest()">&#x1F3AE; العب كضيف الآن</button>
-               <p class="login-note">يمكنك ربط حساب الضيف لاحقًا. الدخول التقليدي متاح بالأسفل.</p>`,
-        type: 'login', confirmText: "دخول باسم مستخدم", autoClose: false,
+        html: `<div class="login-guide"><strong>جاهز للعب؟</strong><br>ابدأ فورًا بدون تسجيل، أو اكتب اسمك لحفظ تقدمك.<br>&#x1F381; <span>هدية البداية:</span> ${STAR}100 للمبتدئين!</div>
+               <div class="login-choice">
+                 <button class="guest-login-btn" onclick="window.loginAsGuest()">&#x1F3AE; العب الآن كضيف</button>
+                 <div class="login-divider"><span>أو احفظ تقدمك</span></div>
+                 <div class="login-input-hint">اسم المستخدم وكلمة المرور فقط — بدون بريد إلكتروني</div>
+               </div>`,
+        type: 'login', confirmText: "دخول / إنشاء حساب", autoClose: false,
         onConfirm: (user, pass) => {
             if (!user || !pass) { AppModal.alert("يرجى كتابة اسم المستخدم وكلمة المرور أولاً!"); displayLoginModal(); return; }
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -1307,40 +1305,6 @@ function finishLogin(user, pass, myFlag, data) {
 }
 
 /* ============ تسجيل الدخول: Firebase Authentication حقيقي، مع ترقية تلقائية للحسابات القديمة ============ */
-async function finishAuthUser(authUser, preferredName) {
-    const myFlag = await fetchUserFlag();
-    let safeBase = (preferredName || authUser.displayName || 'player').trim().replace(/[^\w\u0600-\u06ff-]+/g, '_').slice(0, 28) || 'player';
-    // Stable provider identity prevents duplicate accounts when the display name changes.
-    const user = `player_${authUser.uid.slice(0, 10)}`;
-    const userRef = ref(db, `users/${user}`);
-    const snap = await get(userRef);
-    let data = snap.exists() ? snap.val() : newAccountData(authUser.uid, myFlag);
-    if (data.banned) throw new Error('banned');
-    data.authUid = authUser.uid;
-    data.displayName = data.displayName || safeBase;
-    data.flag = getSafeFlag(data.flag || myFlag);
-    fillUserDataDefaults(data);
-    await set(userRef, data);
-    localStorage.setItem('candyUser', user);
-    localStorage.removeItem('candyPass');
-    localStorage.removeItem('candyGuest');
-    localStorage.setItem('candySocial', '1');
-    window.currentUser = user; window.userData = data;
-    AppModal.close(); startGame();
-}
-async function loginWithProvider(provider) {
-    try {
-        AppModal.show({title:'جاري تسجيل الدخول...', html:'<div class="wait-spinner"></div><p>لحظة ونبدأ اللعب.</p>', autoClose:false, showCancel:false});
-        const cred = await signInWithPopup(auth, provider);
-        await finishAuthUser(cred.user);
-    } catch (err) {
-        console.error(err);
-        AppModal.alert(err.code === 'auth/popup-blocked' ? 'المتصفح منع نافذة الدخول. اسمح بالنوافذ المنبثقة أو استخدم الدخول كضيف.' : 'تعذر إكمال الدخول. تأكد من تفعيل Google أو Facebook من Firebase Console.');
-        displayLoginModal();
-    }
-}
-window.loginWithGoogle = () => loginWithProvider(new GoogleAuthProvider());
-window.loginWithFacebook = () => loginWithProvider(new FacebookAuthProvider());
 window.loginAsGuest = async function() {
     try {
         AppModal.show({title:'جاري تجهيز اللعب...', html:'<div class="wait-spinner"></div>', autoClose:false, showCancel:false});
