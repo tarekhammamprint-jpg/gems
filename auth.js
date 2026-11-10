@@ -19,7 +19,7 @@ export function showLoginScreen(onLoggedIn) {
 function displayLoginModal(onLoggedIn) {
     let audioCtxRef = window.__candyAudioCtx;
     AppModal.show({
-        title: "حلوى النجوم &#x1F31F;",
+        title: "كاندي اون لاين تحدي الاصدقاء &#x1F31F;",
         html: `<div class="login-guide"><strong>كيف تبدأ اللعب؟</strong><br>1. اكتب <span>اسم مستخدم</span>.<br>2. اكتب <span>كلمة مرور</span>.<br>3. اضغط دخول.<br>&#x1F381; <span>هدية:</span> ${STAR}100 للمبتدئين!</div>`,
         type: 'login', confirmText: "دخول / تسجيل حساب", autoClose: false,
         onConfirm: (user, pass) => {

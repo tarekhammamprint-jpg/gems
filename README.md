@@ -1,4 +1,4 @@
-# 🌟 حلوى النجوم — Star Candy
+# 🌟 كاندي اون لاين تحدي الاصدقاء — Star Candy
 
 لعبة ألغاز (Match-3) عربية بنظام معارك بين اللاعبين، مبنية بـ HTML/CSS/JavaScript (ES Modules) و Firebase Realtime Database.
 
