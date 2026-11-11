@@ -181,6 +181,13 @@
     .login-divider:before,.login-divider:after{content:"";height:1px;background:rgba(255,255,255,.18);flex:1}
     .login-note{font-size:11px;color:#aaa;margin:8px 0 0;line-height:1.5}
     .login-input-hint{font-size:11px;color:#9e94b9;margin:-6px 0 11px}
+    .auth-choice{display:flex;flex-direction:column;gap:11px;margin-top:18px}
+    .auth-choice-btn{width:100%;border:0;border-radius:14px;padding:14px 12px;font:800 16px Cairo,sans-serif;cursor:pointer;transition:transform .15s,filter .15s}
+    .auth-choice-btn:active{transform:scale(.97);filter:brightness(1.08)}
+    .auth-login-btn{background:linear-gradient(135deg,#ffd35a,#f39b35);color:#28133d;box-shadow:0 8px 22px rgba(255,190,70,.22)}
+    .auth-register-btn{background:linear-gradient(135deg,#00e6a8,#008f72);color:#03251e;box-shadow:0 8px 22px rgba(0,230,168,.18)}
+    .auth-form-note{font-size:11px;color:#9e94b9;line-height:1.7;margin:8px 0 0}
+
     .first-play-badge{display:inline-block;background:rgba(0,230,168,.15);color:#8affd6;border:1px solid rgba(0,230,168,.35);border-radius:20px;padding:5px 10px;font-size:11px;margin-top:6px}
 
     .wait-spinner{ border:4px solid rgba(255,255,255,0.1); border-top:4px solid var(--gold); border-radius:50%; width:42px; height:42px; animation:spin 1s linear infinite; margin:15px auto;}
@@ -1283,22 +1290,40 @@ function showLoginScreen() {
     } else { displayLoginModal(); }
 }
 
-function displayLoginModal() {
+function displayLoginChoice() {
     AppModal.show({
         title: "كاندي اون لاين تحدي الاصدقاء &#x1F31F;",
-        html: `<div class="login-guide"><strong>ابدأ اللعب في كاندي اون لاين تحدي الاصدقاء</strong><br>اكتب اسمك وكلمة المرور وابدأ اللعب فورًا.<br>&#x1F381; <span>هدية البداية:</span> ${STAR}100 للمبتدئين!</div>
-               <div class="login-choice">
-                 <div class="login-input-hint">اسم المستخدم وكلمة المرور فقط — بدون بريد إلكتروني</div>
-               </div>`,
-        type: 'login', confirmText: "دخول / إنشاء حساب", autoClose: false,
-        onConfirm: (user, pass) => {
-            if (!user || !pass) { AppModal.alert("يرجى كتابة اسم المستخدم وكلمة المرور أولاً!"); displayLoginModal(); return; }
-            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            AppModal.show({title: "جاري الدخول...", html: '<div class="wait-spinner"></div>', autoClose: false, showCancel: false});
-            processLogin(user, pass);
-        }
+        html: `<div class="login-guide"><strong>أهلاً بك!</strong><br>اختر الطريقة المناسبة للبدء. التسجيل لأول مرة ينشئ حسابك ويدخلك تلقائيًا.</div>
+               <div class="auth-choice">
+                 <button class="auth-choice-btn auth-login-btn" onclick="window.openLoginForm('login')">&#x1F510; دخول</button>
+                 <button class="auth-choice-btn auth-register-btn" onclick="window.openLoginForm('register')">&#x2728; تسجيل لأول مرة</button>
+               </div>
+               <p class="auth-form-note">لا تحتاج إلى بريد إلكتروني. استخدم اسمًا وكلمة مرور تتذكرهما.</p>`,
+        hideConfirm: true, showCancel: false, autoClose: false
     });
 }
+window.openLoginForm = function(mode) {
+    const isRegister = mode === 'register';
+    AppModal.show({
+        title: isRegister ? "تسجيل حساب جديد &#x2728;" : "تسجيل الدخول &#x1F510;",
+        html: isRegister
+            ? `<div class="login-guide"><strong>أنشئ حسابك في خطوة واحدة</strong><br>اكتب اسمًا وكلمة مرور، وبعدها ستدخل اللعبة تلقائيًا.<br>&#x1F381; هدية البداية: ${STAR}100</div><p class="auth-form-note">كلمة المرور يجب أن تكون 6 أحرف أو أرقام على الأقل.</p>`
+            : `<div class="login-guide"><strong>مرحبًا بعودتك</strong><br>اكتب بيانات حسابك للمتابعة.</div><p class="auth-form-note">إذا لم تملك حسابًا، اختر «رجوع» ثم «تسجيل لأول مرة».</p>`,
+        type: 'login', confirmText: isRegister ? "إنشاء الحساب والبدء" : "دخول",
+        showCancel: true, cancelText: "رجوع", autoClose: false,
+        onCancel: displayLoginChoice,
+        onConfirm: (user, pass) => {
+            user = (user || '').trim(); pass = (pass || '').trim();
+            if (!user || !pass) { AppModal.alert("اكتب اسم المستخدم وكلمة المرور أولاً."); return; }
+            if (user.length < 3) { AppModal.alert("اسم المستخدم يجب أن يكون 3 أحرف على الأقل."); return; }
+            if (pass.length < 6) { AppModal.alert("كلمة المرور يجب أن تكون 6 أحرف أو أرقام على الأقل."); return; }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            AppModal.show({title: isRegister ? "جاري إنشاء حسابك..." : "جاري تسجيل الدخول...", html: '<div class="wait-spinner"></div><p>لحظة ونفتح اللعبة.</p>', autoClose: false, showCancel: false});
+            (isRegister ? processRegistration : processLogin)(user, pass);
+        }
+    });
+};
+function displayLoginModal() { displayLoginChoice(); }
 
 /* توحيد القيم الافتراضية لأي حساب (قديم أو جديد) في مكان واحد */
 function fillUserDataDefaults(data) {
@@ -1333,78 +1358,64 @@ function finishLogin(user, pass, myFlag, data) {
 
 /* ============ تسجيل الدخول: Firebase Authentication حقيقي، مع ترقية تلقائية للحسابات القديمة ============ */
 async function processLogin(user, pass) {
-    let myFlag = await fetchUserFlag();
-    let authEmail = usernameToAuthEmail(user);
-
+    const myFlag = await fetchUserFlag();
+    const authEmail = usernameToAuthEmail(user);
     try {
-        let cred = await signInWithEmailAndPassword(auth, authEmail, pass);
-        let snap = await get(ref(db, `users/${user}`));
-        if (!snap.exists()) { finishLogin(user, pass, myFlag, newAccountData(cred.user.uid, myFlag)); return; }
-        let data = snap.val();
-        if (data.banned) {
-            localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
-            AppModal.alert("تم حظر هذا الحساب نهائياً من قبل الإدارة! &#x1F6AB;");
-            return;
-        }
+        const cred = await signInWithEmailAndPassword(auth, authEmail, pass);
+        const snap = await get(ref(db, `users/${user}`));
+        if (!snap.exists()) { AppModal.alert("بيانات الحساب غير مكتملة. اختر تسجيل لأول مرة لإنشاء حساب جديد."); displayLoginChoice(); return; }
+        const data = snap.val();
+        if (data.banned) { AppModal.alert("تم حظر هذا الحساب نهائياً من قبل الإدارة! &#x1F6AB;"); return; }
         finishLogin(user, pass, myFlag, data);
-        return;
     } catch (authErr) {
-        if (authErr.code === 'auth/wrong-password') {
-            localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
-            AppModal.alert("كلمة المرور خاطئة يا صديقي!");
-            displayLoginModal();
-            return;
+        if (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential') {
+            AppModal.alert("اسم المستخدم أو كلمة المرور غير صحيحة."); displayLoginChoice(); return;
         }
-    }
-
-    get(ref(db, `users/${user}`)).then(async (snap) => {
-        if (snap.exists()) {
-            let data = snap.val();
-            if (data.banned) {
-                localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
-                return AppModal.alert("تم حظر هذا الحساب نهائياً من قبل الإدارة! &#x1F6AB;");
-            }
-
+        // Keep compatibility with legacy accounts stored with a local hash.
+        try {
+            const snap = await get(ref(db, `users/${user}`));
+            if (!snap.exists()) { AppModal.alert("هذا الحساب غير موجود. اختر تسجيل لأول مرة لإنشاء حسابك."); displayLoginChoice(); return; }
+            const data = snap.val();
+            if (data.banned) { AppModal.alert("تم حظر هذا الحساب نهائياً من قبل الإدارة! &#x1F6AB;"); return; }
             let passOk = false;
-            if (data.passwordHash && data.salt) {
-                let attemptHash = await hashPassword(pass, data.salt);
-                passOk = (attemptHash === data.passwordHash);
-            } else if (data.password) {
-                passOk = (data.password === pass);
-            }
-
-            if (!passOk) {
-                localStorage.removeItem('candyUser'); localStorage.removeItem('candyPass');
-                AppModal.alert("كلمة المرور خاطئة يا صديقي!");
-                displayLoginModal();
-                return;
-            }
-
+            if (data.passwordHash && data.salt) passOk = (await hashPassword(pass, data.salt)) === data.passwordHash;
+            else if (data.password) passOk = data.password === pass;
+            if (!passOk) { AppModal.alert("اسم المستخدم أو كلمة المرور غير صحيحة."); displayLoginChoice(); return; }
             try {
-                let cred = await createUserWithEmailAndPassword(auth, authEmail, pass);
+                const cred = await createUserWithEmailAndPassword(auth, authEmail, pass);
                 update(ref(db, `users/${user}`), { passwordHash: null, salt: null, password: null, authUid: cred.user.uid }).catch(e=>console.log(e));
-                data.authUid = cred.user.uid;
-                finishLogin(user, pass, myFlag, data);
-            } catch (createErr) {
-                AppModal.alert("حصلت مشكلة أثناء ترقية حسابك للنظام الآمن الجديد. جرّب تاني.");
-                displayLoginModal();
+                data.authUid = cred.user.uid; finishLogin(user, pass, myFlag, data);
+            } catch (upgradeErr) {
+                if (upgradeErr.code === 'auth/email-already-in-use') { AppModal.alert("بيانات الدخول غير صحيحة."); }
+                else { AppModal.alert("تعذر فتح الحساب القديم. حاول مرة أخرى."); }
+                displayLoginChoice();
             }
-        } else {
-            try {
-                let cred = await createUserWithEmailAndPassword(auth, authEmail, pass);
-                let newData = newAccountData(cred.user.uid, myFlag);
-                set(ref(db, `users/${user}`), newData);
-                localStorage.setItem('candyUser', user); localStorage.setItem('candyPass', pass);
-                window.currentUser = user; window.userData = newData; AppModal.close(); startGame();
-            } catch (createErr) {
-                if (createErr.code === 'auth/weak-password') AppModal.alert("كلمة المرور قصيرة جدًا، لازم 6 حروف/أرقام على الأقل.");
-                else AppModal.alert("حصلت مشكلة أثناء إنشاء الحساب. جرّب اسم مستخدم تاني.");
-                displayLoginModal();
-            }
-        }
-    }).catch(() => { displayLoginModal(); });
+        } catch (dbErr) { AppModal.alert("تعذر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى."); displayLoginChoice(); }
+    }
 }
-
+async function processRegistration(user, pass) {
+    const myFlag = await fetchUserFlag();
+    const userRef = ref(db, `users/${user}`);
+    try {
+        const existing = await get(userRef);
+        if (existing.exists()) { AppModal.alert("اسم المستخدم مستخدم بالفعل. اختر اسمًا آخر أو اضغط دخول."); window.openLoginForm('register'); return; }
+        const authEmail = usernameToAuthEmail(user);
+        const cred = await createUserWithEmailAndPassword(auth, authEmail, pass);
+        const data = newAccountData(cred.user.uid, myFlag);
+        data.displayName = user;
+        await set(userRef, data);
+        // Automatic login after successful first registration.
+        localStorage.setItem('candyUser', user); localStorage.setItem('candyPass', pass);
+        window.currentUser = user; window.userData = data;
+        AppModal.close(); startGame();
+    } catch (err) {
+        console.error(err);
+        if (err.code === 'auth/email-already-in-use') AppModal.alert("هذا الاسم مستخدم بالفعل. اختر اسمًا آخر أو اضغط دخول.");
+        else if (err.code === 'auth/weak-password') AppModal.alert("كلمة المرور يجب أن تكون 6 أحرف أو أرقام على الأقل.");
+        else AppModal.alert("تعذر إنشاء الحساب. تحقق من الاتصال وحاول مرة أخرى.");
+        window.openLoginForm('register');
+    }
+}
 (async function resumeSavedSession(){
     const savedUser = localStorage.getItem('candyUser');
     const savedPass = localStorage.getItem('candyPass');
