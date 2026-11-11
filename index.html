@@ -222,6 +222,34 @@
         transition:transform .15s; animation:pulseWager 2s infinite; width:100%;
     }
     .intro-play-btn:active{ transform:scale(0.93);}
+    /* ============ Landing screen redesign: focused, premium, mobile-first ============ */
+    body.landing-mode{background:
+        radial-gradient(ellipse 95% 42% at 50% -8%, rgba(117,53,196,.62), transparent 68%),
+        radial-gradient(circle at 15% 75%, rgba(0,230,168,.12), transparent 28%),
+        linear-gradient(180deg,#13082d 0%,#0b061d 100%);}
+    body.landing-mode .user-bar{background:rgba(8,5,25,.42);border-bottom-color:rgba(255,255,255,.08);}
+    body.landing-mode .user-dropdown-container{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);}
+    body.landing-mode .action-btns #supportBtn,body.landing-mode .action-btns #logoutBtn,body.landing-mode .action-btns #surrenderBtn{display:none!important;}
+    body.landing-mode .header,body.landing-mode #objectiveBanner{display:none!important;}
+    body.landing-mode .game-area{min-height:calc(100vh - 64px);justify-content:flex-start;padding:24px 0 30px;}
+    body.landing-mode #starfield{opacity:.42;}
+    body.landing-mode .intro-panel{width:92vw;max-width:390px;min-height:0;padding:28px 20px 22px;border:1px solid rgba(255,255,255,.15);border-radius:30px;background:linear-gradient(155deg,rgba(48,22,91,.82),rgba(15,9,39,.92));box-shadow:0 24px 80px rgba(0,0,0,.42),0 0 0 1px rgba(255,201,77,.08) inset;position:relative;overflow:hidden;}
+    body.landing-mode .intro-panel:before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;top:-132px;right:-76px;background:rgba(255,201,77,.18);filter:blur(2px);}
+    body.landing-mode .intro-panel:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;bottom:-126px;left:-68px;background:rgba(0,230,168,.13);}
+    body.landing-mode .intro-logo{position:relative;font-size:68px;line-height:1;margin:0 0 10px;filter:drop-shadow(0 9px 18px rgba(255,201,77,.32));}
+    body.landing-mode .intro-title{position:relative;font-size:28px;line-height:1.2;margin:0;color:#fff;text-shadow:0 3px 18px rgba(255,201,77,.25);}
+    body.landing-mode .intro-sub{position:relative;font-size:13px;line-height:1.8;color:#d6cbed;margin:12px 0 15px;max-width:290px;}
+    body.landing-mode .first-play-badge{position:relative;margin:0 0 22px;padding:6px 13px;color:#9fffe0;background:rgba(0,230,168,.1);border-color:rgba(0,230,168,.3);}
+    body.landing-mode .intro-menu-grid{display:none;}
+    body.landing-mode .intro-play-btn{position:relative;width:100%;padding:16px 20px;border-radius:16px;font-size:18px;letter-spacing:.1px;background:linear-gradient(135deg,#ffd35a 0%,#ff9d3d 52%,#ff6a73 100%);color:#29113e;box-shadow:0 10px 28px rgba(255,157,61,.28),0 0 0 1px rgba(255,255,255,.22) inset;animation:landingCta 2.4s ease-in-out infinite;}
+    @keyframes landingCta{0%,100%{transform:translateY(0);box-shadow:0 10px 28px rgba(255,157,61,.28),0 0 0 1px rgba(255,255,255,.22) inset}50%{transform:translateY(-3px);box-shadow:0 15px 34px rgba(255,157,61,.4),0 0 0 1px rgba(255,255,255,.3) inset}}
+    body.landing-mode .landing-more-btn{position:relative;margin-top:12px;width:100%;padding:11px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e9e2f7;border-radius:13px;font-family:Cairo,sans-serif;font-weight:700;font-size:13px;cursor:pointer;}
+    body.landing-mode .landing-more-btn:active{transform:scale(.97);}
+    .landing-promise{position:relative;display:flex;justify-content:space-between;width:100%;margin-top:23px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);color:#afa4c6;font-size:11px;}
+    .landing-promise span{display:flex;align-items:center;gap:5px;}
+    .landing-promise b{color:#ffe49b;font-size:13px;}
+    @media (max-height:650px){body.landing-mode .game-area{padding-top:12px}body.landing-mode .intro-panel{padding-top:19px;padding-bottom:16px}body.landing-mode .intro-logo{font-size:54px;margin-bottom:5px}body.landing-mode .intro-title{font-size:24px}body.landing-mode .intro-sub{margin:8px 0 10px}body.landing-mode .first-play-badge{margin-bottom:14px}.landing-promise{margin-top:14px;padding-top:11px}}
+
     #musicToggleBtn{ position:fixed; top:8px; left:8px; z-index:99999; background:rgba(0,0,0,0.55); border:1px solid var(--mint); color:#fff; border-radius:50%; width:36px; height:36px; font-size:16px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.5);}
 
     /* ============ خريطة الرحلة (خريطة صماء بصرية بمسار متعرّج ولا نهاية للمستويات) ============ */
@@ -269,7 +297,7 @@
     @keyframes lmCelebrateOut{ 0%{ transform:translateY(0); opacity:1;} 100%{ transform:translateY(-100%); opacity:0;} }
 </style>
 </head>
-<body>
+<body class="landing-mode">
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
@@ -332,20 +360,23 @@
 
 <div class="game-area">
     <div id="introPanel" class="intro-panel">
-        <div class="intro-logo">&#x1F31F;</div>
+        <div class="intro-logo">&#x1F36C;</div>
         <h2 class="intro-title">كاندي اون لاين تحدي الاصدقاء</h2>
-        <p class="intro-sub">طابق الحلوى، اصنع الكومبو، وتحدى أصدقاءك في دقيقة واحدة.</p>
-        <span class="first-play-badge">لعب سريع • بدون انتظار</span>
-        <div class="intro-menu-grid">
+        <p class="intro-sub">طابق الحلوى، اصنع كومبو خرافي، وخذ مكانك في القمة.</p>
+        <span class="first-play-badge">&#x26A1; جولة سريعة تبدأ الآن</span>
+        <button class="intro-play-btn" onclick="window.startSoloPlay()">&#x1F680; ابدأ التحدي</button>
+        <button class="landing-more-btn" onclick="window.openGameMenu()">&#x2630; المزيد من المميزات</button>
+        <div class="landing-promise"><span><b>&#x23F1;</b> دقيقة واحدة</span><span><b>&#x1F381;</b> مكافآت يومية</span><span><b>&#x1F525;</b> كومبوهات</span></div>
+        <!-- Hidden compatibility actions: kept for battle code, shown through the More menu. -->
+        <div class="intro-menu-grid" aria-hidden="true">
             <button class="btn-small btn-achievements" id="achBtn" onclick="window.openAchievements()">إنجازات 🏅</button>
             <button class="btn-small btn-challenges" id="challengesBtn" onclick="window.openDailyChallenges()">تحديات 🎯</button>
-            <button class="btn-small" style="background:linear-gradient(135deg,#3fb8ff,#1a6ea8);" id="mapBtn" onclick="window.openLevelMap()">خريطة 🗺️</button>
-            <button class="btn-small" style="background:linear-gradient(135deg,#ffd54f,#c9971f);" id="leaderboardBtn" onclick="window.openLeaderboard()">الأفضل 🏆</button>
+            <button class="btn-small" id="mapBtn" onclick="window.openLevelMap()">خريطة 🗺️</button>
+            <button class="btn-small" id="leaderboardBtn" onclick="window.openLeaderboard()">الأفضل 🏆</button>
             <button class="btn-small btn-spin" id="spinBtn" onclick="window.openSpinWheel()">عجلة الحظ 🎨</button>
-            <button style="background:linear-gradient(135deg,#9b59b6,#6c2f8c);" class="btn-small" id="randomBtn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
-            <button class="btn-small btn-menu" id="menuBtn" style="grid-column:span 2;" onclick="window.toggleSidebar()">اللعب مع الأصدقاء 👥</button>
+            <button class="btn-small" id="randomBtn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
+            <button class="btn-small btn-menu" id="menuBtn" onclick="window.toggleSidebar()">اللعب مع الأصدقاء 👥</button>
         </div>
-        <button class="intro-play-btn" onclick="window.startSoloPlay()">&#x1F3AE; العب الآن مجانًا</button>
     </div>
     <div class="grid" id="grid" style="display:none;"></div>
     <div class="skill-bar" id="skillBar" style="display:none;">
@@ -1546,10 +1577,11 @@ window.openGameMenu = function() {
         <button class="um-btn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
         <button class="um-btn" style="grid-column:span 2;" onclick="window.toggleSidebar()">اللعب مع الأصدقاء 👥</button>
     </div>`;
-    AppModal.show({ title: "القائمة الرئيسية &#x2630;", html: html, confirmText: "إغلاق" });
+    AppModal.show({ title: "ماذا تريد أن تفعل؟ &#x2630;", html: html, confirmText: "إغلاق" });
 };
 
 window.startSoloPlay = function() {
+    document.body.classList.remove('landing-mode');
     document.getElementById('introPanel').style.display = 'none';
     document.getElementById('grid').style.display = 'grid';
     stopBackgroundMusic();
@@ -2072,6 +2104,7 @@ window.surrenderBattle = surrenderBattle;
    البوت يلعب بمستوى مهارة قريب من مستوى اللاعب، والنتيجة تُحسم فعلياً
    بالأداء العشوائي الطبيعي لكل طرف، دون أي تلاعب لصالح "البيت". */
 function startBotBattle(wager, botName, botFlag) {
+    document.body.classList.remove('landing-mode');
     document.getElementById('introPanel').style.display = 'none';
     document.getElementById('grid').style.display = 'grid';
     stopBackgroundMusic();
