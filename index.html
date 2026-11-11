@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>كاندي اون لاين تحدي الاصدقاء</title>
-<meta name="description" content="كاندي اون لاين تحدي الاصدقاء: لعبة مطابقة حلوى عربية سريعة، العب فورًا كضيف وتحدى أصدقاءك." />
+<meta name="description" content="كاندي اون لاين تحدي الاصدقاء: لعبة مطابقة حلوى عربية سريعة، العب فورًا وتحدى أصدقاءك." />
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#160a2e" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -177,7 +177,6 @@
     .login-guide{ background:rgba(0,0,0,0.25); border-radius:10px; padding:13px; margin-bottom:15px; text-align:right; font-size:13px; line-height:1.7; color:#ddd; border-right:3px solid var(--mint);}
     .login-guide span{ color:var(--gold); font-weight:800;}
     .login-choice{display:flex;flex-direction:column;gap:9px;margin-top:10px}
-    .guest-login-btn{border:0;border-radius:12px;padding:13px 10px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;color:#fff;font-size:15px;width:100%;background:linear-gradient(135deg,#00e6a8,#008f72);box-shadow:0 5px 14px rgba(0,230,168,.22)}
     .login-divider{display:flex;align-items:center;gap:8px;color:#9e94b9;font-size:11px;margin:3px 0}
     .login-divider:before,.login-divider:after{content:"";height:1px;background:rgba(255,255,255,.18);flex:1}
     .login-note{font-size:11px;color:#aaa;margin:8px 0 0;line-height:1.5}
@@ -301,7 +300,6 @@
 
 <div id="starfield"></div>
 <button id="musicToggleBtn" onclick="window.toggleMusic()">&#x1F50A;</button>
-<div style="position:fixed; bottom:4px; left:4px; z-index:99999; background:rgba(0,0,0,0.6); color:#8affd6; font-size:10px; padding:3px 8px; border-radius:6px; font-family:monospace; pointer-events:none;">build: 2026-11-10-simple-login</div>
 
 <div class="sidebar" id="sidebar">
     <button class="sidebar-close" onclick="window.toggleSidebar()">❌</button>
@@ -436,7 +434,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, updateEmail, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, updateEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBGwo-ds88ucY9MTDxx7x_rPppnThvjiGc",
@@ -1288,10 +1286,8 @@ function showLoginScreen() {
 function displayLoginModal() {
     AppModal.show({
         title: "كاندي اون لاين تحدي الاصدقاء &#x1F31F;",
-        html: `<div class="login-guide"><strong>ابدأ اللعب في كاندي اون لاين تحدي الاصدقاء</strong><br>ابدأ فورًا بدون تسجيل، أو اكتب اسمك لحفظ تقدمك.<br>&#x1F381; <span>هدية البداية:</span> ${STAR}100 للمبتدئين!</div>
+        html: `<div class="login-guide"><strong>ابدأ اللعب في كاندي اون لاين تحدي الاصدقاء</strong><br>اكتب اسمك وكلمة المرور وابدأ اللعب فورًا.<br>&#x1F381; <span>هدية البداية:</span> ${STAR}100 للمبتدئين!</div>
                <div class="login-choice">
-                 <button class="guest-login-btn" onclick="window.loginAsGuest()">&#x1F3AE; العب الآن كضيف</button>
-                 <div class="login-divider"><span>أو احفظ تقدمك</span></div>
                  <div class="login-input-hint">اسم المستخدم وكلمة المرور فقط — بدون بريد إلكتروني</div>
                </div>`,
         type: 'login', confirmText: "دخول / إنشاء حساب", autoClose: false,
@@ -1336,25 +1332,6 @@ function finishLogin(user, pass, myFlag, data) {
 }
 
 /* ============ تسجيل الدخول: Firebase Authentication حقيقي، مع ترقية تلقائية للحسابات القديمة ============ */
-window.loginAsGuest = async function() {
-    try {
-        AppModal.show({title:'جاري تجهيز اللعب...', html:'<div class="wait-spinner"></div>', autoClose:false, showCancel:false});
-        const cred = await signInAnonymously(auth);
-        const user = `guest_${cred.user.uid.slice(0, 10)}`;
-        const userRef = ref(db, `users/${user}`);
-        const snap = await get(userRef);
-        const myFlag = await fetchUserFlag();
-        const data = snap.exists() ? snap.val() : newAccountData(cred.user.uid, myFlag);
-        data.isGuest = true; data.displayName = data.displayName || 'ضيف'; fillUserDataDefaults(data);
-        await set(userRef, data);
-        localStorage.setItem('candyUser', user); localStorage.setItem('candyGuest', '1'); localStorage.removeItem('candyPass');
-        localStorage.removeItem('candySocial');
-        window.currentUser = user; window.userData = data; AppModal.close(); startGame();
-    } catch (err) {
-        console.error(err); AppModal.alert('تعذر الدخول كضيف. تأكد من تفعيل Anonymous في Firebase Authentication.'); displayLoginModal();
-    }
-};
-
 async function processLogin(user, pass) {
     let myFlag = await fetchUserFlag();
     let authEmail = usernameToAuthEmail(user);
@@ -1431,14 +1408,6 @@ async function processLogin(user, pass) {
 (async function resumeSavedSession(){
     const savedUser = localStorage.getItem('candyUser');
     const savedPass = localStorage.getItem('candyPass');
-    const savedGuest = localStorage.getItem('candyGuest');
-    if (savedGuest && savedUser) {
-        try {
-            const cred = auth.currentUser || (await signInAnonymously(auth));
-            const snap = await get(ref(db, `users/${savedUser}`));
-            if (snap.exists()) { window.currentUser=savedUser; window.userData=snap.val(); startGame(); return; }
-        } catch(e) { console.warn(e); }
-    }
     if (savedUser && savedPass) { showLoginScreen(); return; }
     displayLoginModal();
 })();

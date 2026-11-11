@@ -1,8 +1,8 @@
 # ملاحظات النشر
 
-1. من Firebase Console فعّل Anonymous في Firebase حتى يعمل الدخول كضيف.
+1. من Firebase Console استخدم Firebase Authentication للحسابات التقليدية قبل النشر.
 2. راجع قواعد `firebase-security-rules-v2.json` قبل تطبيقها، واختبرها على مشروع Firebase منفصل أولًا.
-3. الدخول كضيف أو باسم مستخدم هو المسار المعتمد والبسيط في هذه النسخة.
+3. الدخول باسم مستخدم هو المسار المعتمد والبسيط في هذه النسخة.
 4. ارفع `index.html` و`manifest.json` و`service-worker.js` و`icon.svg` على نفس النطاق.
 5. أضف سياسة الخصوصية إلى صفحة المتجر.
 6. اربط Play Console Analytics أو Firebase Analytics لقياس: فتح اللعبة، بدء أول جولة، إنهاء أول جولة، والعودة بعد يوم.
