@@ -1557,6 +1557,13 @@ window.challengeSelectedBot = challengeSelectedBot;
 function dayKey(d) { return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
 /* ============ بدء اللعب الفردي من صفحة الترحيب ============ */
 /* ============ القائمة الرئيسية (نسخة مصغّرة تظهر أثناء اللعب كمان، من غير ما نحتاج نرجع لشاشة الترحيب) ============ */
+window.openFriendsList = function() {
+    // إغلاق نافذة القائمة أولاً حتى لا تغطي قائمة الأشخاص.
+    AppModal.close();
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.add('open');
+    playSound('click');
+};
 window.openGameMenu = function() {
     playSound('click');
     let html = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -1566,7 +1573,7 @@ window.openGameMenu = function() {
         <button class="um-btn" onclick="window.openLeaderboard()">الأفضل 🏆</button>
         <button class="um-btn" onclick="window.openSpinWheel()">عجلة الحظ 🎨</button>
         <button class="um-btn" onclick="window.startRandomMatch()">عشوائي 🎲</button>
-        <button class="um-btn" style="grid-column:span 2;" onclick="window.toggleSidebar()">اللعب مع الأصدقاء 👥</button>
+        <button class="um-btn" style="grid-column:span 2;" onclick="window.openFriendsList()">اللعب مع الأصدقاء 👥</button>
     </div>`;
     AppModal.show({ title: "ماذا تريد أن تفعل؟ &#x2630;", html: html, confirmText: "إغلاق" });
 };
